@@ -526,3 +526,165 @@ Content-Type: application/json
 
 ### Delete Notification (replace {id} with actual notification ID)
 DELETE http://localhost:5001/api/notifications/{id}
+###############################################
+### MENTAL HEALTH LOGGING APIS
+###############################################
+
+### 1. PATIENT FEATURES - Quick Mood Log (Daily Entry)
+POST http://localhost:5001/api/mental-health/quick-log
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "mood_rating": 8,
+  "stress_level": "Low",
+  "anxiety_level": "Low",
+  "notes": "Feeling great today! Had a productive morning."
+}
+
+### 2. PATIENT FEATURES - Full Mental Health Log Entry (with surveys)
+POST http://localhost:5001/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 8,
+  "stress_level": "medium",
+  "anxiety_level": "medium",
+  "sleep_hours": 7.5,
+  "sleep_quality": 8,
+  "gad7_score": 5,
+  "phq9_score": 6,
+  "notes": "Patient feeling stable"
+}
+
+### 3. PATIENT FEATURES - Get Recent Mood Logs (Last 7 Days)
+GET http://localhost:5001/api/mental-health/recent/9897
+
+### 4. DOCTOR FEATURES - Get All Mental Health Logs for Patient
+GET http://localhost:5001/api/mental-health/patient/9897
+
+### 5. DOCTOR FEATURES - Get Patient Logs with Date Filter
+GET http://localhost:5001/api/mental-health/patient/9897?startDate=2026-01-01&endDate=2026-01-16&limit=50
+
+### 6. DOCTOR FEATURES - Get Mental Health Analytics (30 days)
+GET http://localhost:5001/api/mental-health/analytics/9897?period=30
+
+### 7. DOCTOR FEATURES - Get Mental Health Analytics (7 days)
+GET http://localhost:5001/api/mental-health/analytics/9897?period=7
+
+### 8. Get Single Mental Health Log by ID (replace {id} with actual log ID)
+GET http://localhost:5001/api/mental-health/65f00000000000000000901
+
+### 9. Update Mental Health Log (replace {id} with actual log ID)
+PUT http://localhost:5001/api/mental-health/65f00000000000000000901
+Content-Type: application/json
+
+{
+  "notes": "Updated: Patient showing improvement",
+  "gad7_score": 4,
+  "phq9_score": 5
+}
+
+### 10. Delete Mental Health Log (replace {id} with actual log ID)
+DELETE http://localhost:5001/api/mental-health/65f00000000000000000901
+
+###############################################
+### TEST SCENARIOS FOR MENTAL HEALTH
+###############################################
+
+### Scenario 1: Happy Patient (Good Mental Health)
+POST http://localhost:5001/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9897",
+  "mood_rating": 9,
+  "stress_level": "Low",
+  "anxiety_level": "Low",
+  "sleep_hours": 8,
+  "sleep_quality": 9,
+  "gad7_score": 2,
+  "phq9_score": 3,
+  "notes": "Feeling excellent today!"
+}
+
+### Scenario 2: Patient with Moderate Anxiety
+POST http://localhost:5001/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 5,
+  "stress_level": "High",
+  "anxiety_level": "High",
+  "sleep_hours": 5,
+  "sleep_quality": 4,
+  "gad7_score": 12,
+  "phq9_score": 8,
+  "notes": "Patient reports increased worry and difficulty sleeping"
+}
+
+### Scenario 3: Patient with Depression Symptoms
+POST http://localhost:5001/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 3,
+  "stress_level": "Medium",
+  "anxiety_level": "Medium",
+  "sleep_hours": 10,
+  "sleep_quality": 3,
+  "gad7_score": 7,
+  "phq9_score": 16,
+  "notes": "Patient showing signs of moderately severe depression"
+}
+
+### Scenario 4: Daily Mood Tracking - Day 1
+POST http://localhost:5001/api/mental-health/quick-log
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "mood_rating": 7,
+  "stress_level": "Medium",
+  "anxiety_level": "Low",
+  "notes": "Average day, some work stress"
+}
+
+### Scenario 5: Daily Mood Tracking - Day 2
+POST http://localhost:5001/api/mental-health/quick-log
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "mood_rating": 9,
+  "stress_level": "Low",
+  "anxiety_level": "Low",
+  "notes": "Great day! Relaxing weekend"
+}
+
+### Scenario 6: Weekly Mental Health Assessment
+POST http://localhost:5001/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 7,
+  "stress_level": "Medium",
+  "anxiety_level": "Medium",
+  "sleep_hours": 7,
+  "sleep_quality": 7,
+  "gad7_score": 6,
+  "phq9_score": 7,
+  "notes": "Weekly check-in: Patient maintaining stable mood. Sleep patterns regular. Continue monitoring."
+}
+
+### Get All Logs After Creating Multiple Entries
+GET http://localhost:5001/api/mental-health/patient/9897?limit=100

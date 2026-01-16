@@ -1,4 +1,5 @@
 const MedicalDocument = require('../models/MedicalDocument');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
 // @desc    Get all medical documents with filters
 // @route   GET /api/medical-documents
@@ -174,10 +175,71 @@ exports.getDocumentById = async (req, res) => {
 };
 
 // @desc    Create new medical document
-// @route   POST /api/medical-documents
+// @route   POST /api/medical-documents/upload
 // @access  Private
 exports.createDocument = async (req, res) => {
   try {
+    // Check if file was uploaded via multer
+    if (req.file) {
+      // Upload file to Cloudinary
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        req.file.originalname,
+        'medical_documents'
+      );
+
+      if (!uploadResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload file to Cloudinary',
+          error: uploadResult.error
+        });
+      }
+
+      // Extract data from request body and uploaded file
+      const {
+        patient_id,
+        uploaded_by,
+        document_type = 'other',
+        description = '',
+        tags = []
+      } = req.body;
+
+      // Auto-categorize document
+      const category = MedicalDocument.autoCategorizeDOcument(document_type);
+
+      // Create document in database
+      const document = await MedicalDocument.create({
+        patient_id,
+        uploaded_by,
+        file_name: req.file.originalname,
+        file_url: uploadResult.url,
+        cloudinary_public_id: uploadResult.public_id,
+        file_size: uploadResult.size,
+        file_type: req.file.mimetype,
+        document_type,
+        category,
+        description,
+        tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
+        ocr_extracted_text: '',
+        ai_detected_conditions: [],
+        is_ai_verified: false
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'File uploaded successfully to Cloudinary',
+        data: document,
+        cloudinary: {
+          url: uploadResult.url,
+          public_id: uploadResult.public_id,
+          format: uploadResult.format,
+          size: uploadResult.size
+        }
+      });
+    }
+
+    // If no file uploaded, create document with provided URL (manual entry)
     const {
       patient_id,
       uploaded_by,

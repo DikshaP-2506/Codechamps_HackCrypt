@@ -64,7 +64,6 @@ app.use('/api/physical-vitals', require('./routes/physicalVitalsRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/api/community', require('./routes/communityRoutes'));
 
 // Root route
 app.get('/', (req, res) => {
@@ -78,7 +77,8 @@ app.get('/', (req, res) => {
       physicalVitals: '/api/physical-vitals',
       prescriptions: '/api/prescriptions',
       appointments: '/api/appointments',
-      notifications: '/api/notifications'
+      notifications: '/api/notifications',
+      mentalHealth: '/api/mental-health'
     }
   });
 });

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const upload = require('../config/multer');
 const {
   getAllDocuments,
   getDocumentsByPatientId,
@@ -20,6 +21,9 @@ const { validateMedicalDocument } = require('../middleware/validators');
 
 // Statistics route (must be before /:id)
 router.get('/stats/overview', getDocumentStats);
+
+// File upload route (with multer middleware)
+router.post('/upload', upload.single('file'), createDocument);
 
 // Main routes
 router.route('/')

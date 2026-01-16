@@ -11,32 +11,41 @@ cloudinary.config({
   secure: true
 });
 
-// Helper function to upload file to Cloudinary
-const uploadToCloudinary = async (filePath, folder = 'medical_docs') => {
-  try {
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: folder,
-      resource_type: 'auto', // Automatically detect file type
-      use_filename: true,
-      unique_filename: true
-    });
+// Helper function to upload file to Cloudinary from buffer (multer memory storage)
+const uploadToCloudinary = async (fileBuffer, originalName, folder = 'medical_docs') => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'auto',
+        use_filename: true,
+        unique_filename: true,
+        public_id: originalName.split('.')[0] + '_' + Date.now()
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          reject({
+            success: false,
+            error: error.message
+          });
+        } else {
+          resolve({
+            success: true,
+            url: result.secure_url,
+            public_id: result.public_id,
+            format: result.format,
+            size: result.bytes,
+            width: result.width || null,
+            height: result.height || null,
+            resource_type: result.resource_type
+          });
+        }
+      }
+    );
 
-    return {
-      success: true,
-      url: result.secure_url,
-      public_id: result.public_id,
-      format: result.format,
-      size: result.bytes,
-      width: result.width,
-      height: result.height
-    };
-  } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
+    uploadStream.end(fileBuffer);
+  });
 };
 
 // Helper function to delete file from Cloudinary

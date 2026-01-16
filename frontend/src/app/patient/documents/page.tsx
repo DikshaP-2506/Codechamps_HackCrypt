@@ -14,6 +14,14 @@ interface MedicalDocument {
   description?: string;
   uploaded_at: string;
   uploaded_by: string;
+  report_details?: {
+    test_date?: string;
+    laboratory?: string;
+    test_category?: string;
+    priority?: string;
+    ordering_doctor?: string;
+    report_notes?: string;
+  };
 }
 
 export default function PatientDocumentsPage() {
@@ -26,7 +34,37 @@ export default function PatientDocumentsPage() {
     document_type: 'Lab Report',
     category: 'medical_records',
     description: '',
+    test_date: new Date().toISOString().split('T')[0],
+    laboratory: '',
+    test_category: '',
+    priority: 'normal',
+    ordering_doctor: '',
+    report_notes: '',
   });
+
+  // Doctors list
+  const [doctors, setDoctors] = useState<Array<{ id: string; name: string; specialization?: string }>>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+
+  // Fetch doctors on component mount
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchDoctors = async () => {
+    setLoadingDoctors(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/users/doctors');
+      const data = await response.json();
+      if (data.success) {
+        setDoctors(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
 
   // Fetch documents
   const fetchDocuments = async () => {
@@ -69,6 +107,17 @@ export default function PatientDocumentsPage() {
     formData.append('category', uploadData.category);
     formData.append('description', uploadData.description);
 
+    // Add metadata with additional fields
+    const metadata = {
+      test_date: uploadData.test_date,
+      laboratory: uploadData.laboratory,
+      test_category: uploadData.test_category,
+      priority: uploadData.priority,
+      ordering_doctor: uploadData.ordering_doctor,
+      report_notes: uploadData.report_notes,
+    };
+    formData.append('metadata', JSON.stringify(metadata));
+
     try {
       const response = await fetch('http://localhost:5001/api/medical-documents/upload', {
         method: 'POST',
@@ -84,6 +133,12 @@ export default function PatientDocumentsPage() {
           document_type: 'Lab Report',
           category: 'medical_records',
           description: '',
+          test_date: new Date().toISOString().split('T')[0],
+          laboratory: '',
+          test_category: '',
+          priority: 'normal',
+          ordering_doctor: '',
+          report_notes: '',
         });
         fetchDocuments(); // Refresh list
       } else {
@@ -137,22 +192,126 @@ export default function PatientDocumentsPage() {
             )}
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Document Type</label>
+              <select
+                value={uploadData.document_type}
+                onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Lab Report">Lab Report</option>
+                <option value="Prescription">Prescription</option>
+                <option value="X-Ray">X-Ray</option>
+                <option value="MRI Scan">MRI Scan</option>
+                <option value="CT Scan">CT Scan</option>
+                <option value="Blood Test">Blood Test</option>
+                <option value="Ultrasound">Ultrasound</option>
+                <option value="ECG/EKG">ECG/EKG</option>
+                <option value="Pathology Report">Pathology Report</option>
+                <option value="Discharge Summary">Discharge Summary</option>
+                <option value="Medical Certificate">Medical Certificate</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Test Date</label>
+              <input
+                type="date"
+                value={uploadData.test_date}
+                onChange={(e) => setUploadData({ ...uploadData, test_date: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Laboratory/Department</label>
+              <select
+                value={uploadData.laboratory}
+                onChange={(e) => setUploadData({ ...uploadData, laboratory: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select lab...</option>
+                <option value="Hematology">Hematology</option>
+                <option value="Radiology">Radiology</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Pathology">Pathology</option>
+                <option value="Microbiology">Microbiology</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Test Category</label>
+              <select
+                value={uploadData.test_category}
+                onChange={(e) => setUploadData({ ...uploadData, test_category: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select category...</option>
+                <option value="Routine">Routine</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Emergency">Emergency</option>
+                <option value="Pre-operative">Pre-operative</option>
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium mb-2">Document Type</label>
+            <label className="block text-sm font-medium mb-2">Priority Level</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="priority"
+                  value="normal"
+                  checked={uploadData.priority === 'normal'}
+                  onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <span className="text-sm">⚪ Normal</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="priority"
+                  value="urgent"
+                  checked={uploadData.priority === 'urgent'}
+                  onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <span className="text-sm">🟡 Urgent</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="priority"
+                  value="emergency"
+                  checked={uploadData.priority === 'emergency'}
+                  onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
+                  className="h-4 w-4 text-blue-600"
+                />
+                <span className="text-sm">🔴 Emergency</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Ordering Doctor</label>
             <select
-              value={uploadData.document_type}
-              onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={uploadData.ordering_doctor}
+              onChange={(e) => setUploadData({ ...uploadData, ordering_doctor: e.target.value })}
+              disabled={loadingDoctors}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              <option value="Lab Report">Lab Report</option>
-              <option value="Prescription">Prescription</option>
-              <option value="X-Ray">X-Ray</option>
-              <option value="MRI Scan">MRI Scan</option>
-              <option value="CT Scan">CT Scan</option>
-              <option value="Blood Test">Blood Test</option>
-              <option value="Discharge Summary">Discharge Summary</option>
-              <option value="Medical Certificate">Medical Certificate</option>
-              <option value="Other">Other</option>
+              <option value="">
+                {loadingDoctors ? 'Loading doctors...' : 'Select doctor...'}
+              </option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.name}>
+                  {doc.name} {doc.specialization ? `- ${doc.specialization}` : ''}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -181,6 +340,21 @@ export default function PatientDocumentsPage() {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={3}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Report Notes (Optional)</label>
+            <textarea
+              value={uploadData.report_notes}
+              onChange={(e) => setUploadData({ ...uploadData, report_notes: e.target.value })}
+              placeholder="Add any additional observations or notes about this report..."
+              maxLength={500}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+            />
+            <p className="mt-1 text-right text-xs text-gray-500">
+              [{uploadData.report_notes.length}/500]
+            </p>
           </div>
 
           <button
@@ -225,9 +399,35 @@ export default function PatientDocumentsPage() {
                         <span>{formatFileSize(doc.file_size)}</span>
                         <span>•</span>
                         <span>{formatDate(doc.uploaded_at)}</span>
+                        {doc.report_details?.priority && doc.report_details.priority !== 'normal' && (
+                          <>
+                            <span>•</span>
+                            <span className={`font-semibold ${
+                              doc.report_details.priority === 'emergency' ? 'text-red-600' : 'text-orange-600'
+                            }`}>
+                              {doc.report_details.priority === 'emergency' ? '🔴 EMERGENCY' : '🟡 URGENT'}
+                            </span>
+                          </>
+                        )}
                       </div>
                       {doc.description && (
                         <p className="text-sm text-gray-700 mt-1">{doc.description}</p>
+                      )}
+                      {doc.report_details && (
+                        <div className="text-xs text-gray-600 mt-2 space-y-1">
+                          {doc.report_details.test_date && (
+                            <p>📅 Test Date: {new Date(doc.report_details.test_date).toLocaleDateString()}</p>
+                          )}
+                          {doc.report_details.laboratory && (
+                            <p>🏥 Lab: {doc.report_details.laboratory}</p>
+                          )}
+                          {doc.report_details.ordering_doctor && (
+                            <p>👨‍⚕️ Doctor: {doc.report_details.ordering_doctor}</p>
+                          )}
+                          {doc.report_details.report_notes && (
+                            <p>📝 Notes: {doc.report_details.report_notes}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

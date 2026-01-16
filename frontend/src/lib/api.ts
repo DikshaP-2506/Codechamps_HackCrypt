@@ -285,3 +285,75 @@ export const notificationsAPI = {
     }).then(r => r.json());
   },
 };
+
+// Community APIs
+const withUserHeaders = (userId?: string, userName?: string) => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (userId) headers['x-user-id'] = userId;
+  if (userName) headers['x-user-name'] = userName;
+  return headers;
+};
+
+export const communityAPI = {
+  list: async (userId?: string) => {
+    return fetch(`${API_BASE_URL}/community`, {
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  create: async (data: any, userId?: string, userName?: string) => {
+    return fetch(`${API_BASE_URL}/community`, {
+      method: 'POST',
+      headers: withUserHeaders(userId, userName),
+      body: JSON.stringify(data),
+    }).then((r) => r.json());
+  },
+
+  getById: async (id: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}`, {
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  join: async (id: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}/join`, {
+      method: 'POST',
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  leave: async (id: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}/leave`, {
+      method: 'POST',
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  sendMessage: async (id: string, text: string, userId?: string, userName?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}/messages`, {
+      method: 'POST',
+      headers: withUserHeaders(userId, userName),
+      body: JSON.stringify({ text, sender_name: userName }),
+    }).then((r) => r.json());
+  },
+
+  listMessages: async (id: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}/messages`, {
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  approveRequest: async (id: string, requestId: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}/requests/${requestId}/approve`, {
+      method: 'POST',
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+
+  delete: async (id: string, userId?: string) => {
+    return fetch(`${API_BASE_URL}/community/${id}`, {
+      method: 'DELETE',
+      headers: withUserHeaders(userId),
+    }).then((r) => r.json());
+  },
+};

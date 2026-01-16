@@ -24,7 +24,7 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-name']
 }));
 
 // Body parser
@@ -64,6 +64,7 @@ app.use('/api/physical-vitals', require('./routes/physicalVitalsRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/community', require('./routes/communityRoutes'));
 
 // Root route
 app.get('/', (req, res) => {

@@ -1,0 +1,167 @@
+{
+  "medical_documents_collection": {
+    "description": "Complete JSON structure for medical_documents in MongoDB",
+    "example_document": {
+      "_id": "ObjectId()",
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "patient_id": "patient_12345",
+      "uploaded_by": "lab_reporter_67890",
+      "file_name": "xray_chest_2026.pdf",
+      "file_url": "https://res.cloudinary.com/dt9l4yn08/image/upload/v1234567890/medical_documents/file.pdf",
+      "cloudinary_public_id": "medical_documents/file",
+      "file_size": 2457600,
+      "file_type": "application/pdf",
+      "document_type": "X-Ray",
+      "category": "radiology",
+      "is_ai_verified": false,
+      "ocr_extracted_text": "",
+      "ai_detected_conditions": [],
+      "description": "Chest X-Ray for routine checkup",
+      "tags": ["radiology", "chest", "routine"],
+      
+      "report_details": {
+        "test_date": "2026-01-07T00:00:00.000Z",
+        "laboratory": "Cardiology",
+        "test_category": "Routine",
+        "priority": "normal",
+        "ordering_doctor": "Dr. Sarah Lee",
+        "report_notes": "Patient presented with mild chest discomfort. No abnormalities detected."
+      },
+      
+      "notifications": {
+        "notify_patient": true,
+        "notify_doctor": true,
+        "patient_notified_at": "2026-01-17T10:30:00.000Z",
+        "doctor_notified_at": "2026-01-17T10:30:00.000Z"
+      },
+      
+      "version": 1,
+      "parent_document_id": null,
+      "is_latest_version": true,
+      
+      "shared_with": [
+        {
+          "user_id": "doctor_id_123",
+          "user_role": "doctor",
+          "permission": "view",
+          "shared_at": "2026-01-17T10:30:00.000Z"
+        }
+      ],
+      
+      "access_logs": [
+        {
+          "accessed_by": "patient_12345",
+          "accessed_at": "2026-01-17T11:00:00.000Z",
+          "action": "viewed",
+          "ip_address": "192.168.1.1"
+        }
+      ],
+      
+      "is_active": true,
+      "is_deleted": false,
+      "uploaded_at": "2026-01-17T10:30:00.000Z",
+      "updated_at": "2026-01-17T10:30:00.000Z",
+      "createdAt": "2026-01-17T10:30:00.000Z",
+      "updatedAt": "2026-01-17T10:30:00.000Z"
+    },
+    
+    "field_definitions": {
+      "report_details": {
+        "test_date": {
+          "type": "Date",
+          "required": false,
+          "description": "Date when the medical test was performed"
+        },
+        "laboratory": {
+          "type": "String",
+          "maxLength": 200,
+          "description": "Laboratory or department name (e.g., Cardiology, Radiology)"
+        },
+        "test_category": {
+          "type": "String",
+          "maxLength": 100,
+          "description": "Category of the test (e.g., Routine, Follow-up, Emergency)"
+        },
+        "priority": {
+          "type": "String",
+          "enum": ["normal", "urgent", "emergency"],
+          "default": "normal",
+          "description": "Priority level of the report"
+        },
+        "ordering_doctor": {
+          "type": "String",
+          "maxLength": 200,
+          "description": "Name or ID of the doctor who ordered the test"
+        },
+        "report_notes": {
+          "type": "String",
+          "maxLength": 1000,
+          "description": "Additional observations or notes about the report"
+        }
+      },
+      
+      "notifications": {
+        "notify_patient": {
+          "type": "Boolean",
+          "default": true,
+          "description": "Whether to send notification to patient when document is verified"
+        },
+        "notify_doctor": {
+          "type": "Boolean",
+          "default": true,
+          "description": "Whether to send notification to ordering doctor"
+        },
+        "patient_notified_at": {
+          "type": "Date",
+          "default": null,
+          "description": "Timestamp when patient was notified"
+        },
+        "doctor_notified_at": {
+          "type": "Date",
+          "default": null,
+          "description": "Timestamp when doctor was notified"
+        }
+      }
+    },
+    
+    "api_usage_example": {
+      "endpoint": "POST http://localhost:5001/api/medical-documents/upload",
+      "content_type": "multipart/form-data",
+      "form_data": {
+        "file": "[File Object]",
+        "patient_id": "patient_12345",
+        "uploaded_by": "lab_reporter_67890",
+        "document_type": "X-Ray",
+        "category": "radiology",
+        "description": "Chest X-Ray for routine checkup",
+        "notify_patient": "true",
+        "notify_doctor": "true",
+        "metadata": {
+          "test_date": "2026-01-07",
+          "laboratory": "Cardiology",
+          "test_category": "Routine",
+          "ordering_doctor": "Dr. Sarah Lee",
+          "priority": "normal",
+          "report_notes": "Patient presented with mild chest discomfort."
+        }
+      }
+    },
+    
+    "notification_behavior": {
+      "patient_notification": {
+        "trigger": "When notify_patient is true and document is uploaded",
+        "notification_type": "document_uploaded",
+        "title": "New Medical Document Available",
+        "message": "A new [document_type] has been uploaded to your medical records for test dated [test_date].",
+        "priority": "Uses report_details.priority field"
+      },
+      "doctor_notification": {
+        "trigger": "When notify_doctor is true and ordering_doctor is specified",
+        "notification_type": "document_uploaded",
+        "title": "Lab Report Ready for Review",
+        "message": "A [document_type] is ready for your review from [laboratory].",
+        "priority": "Uses report_details.priority field"
+      }
+    }
+  }
+}

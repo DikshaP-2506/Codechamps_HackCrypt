@@ -1,5 +1,61 @@
 const MedicalDocument = require('../models/MedicalDocument');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+const Notification = require('../models/Notification');
+
+// Helper function to send notification to patient
+async function sendPatientNotification(patientId, document) {
+  try {
+    await Notification.create({
+      user_id: patientId,
+      user_role: 'patient',
+      notification_type: 'document_uploaded',
+      title: 'New Medical Document Available',
+      message: `A new ${document.document_type} has been uploaded to your medical records${document.report_details?.test_date ? ` for test dated ${new Date(document.report_details.test_date).toLocaleDateString()}` : ''}.`,
+      priority: document.report_details?.priority || 'normal',
+      metadata: {
+        document_id: document._id,
+        document_type: document.document_type,
+        file_name: document.file_name
+      }
+    });
+
+    // Update notification timestamp
+    document.notifications.patient_notified_at = new Date();
+    await document.save();
+    
+    console.log(`Patient notification sent for document ${document._id}`);
+  } catch (error) {
+    console.error('Error sending patient notification:', error);
+  }
+}
+
+// Helper function to send notification to doctor
+async function sendDoctorNotification(doctorId, document) {
+  try {
+    await Notification.create({
+      user_id: doctorId,
+      user_role: 'doctor',
+      notification_type: 'document_uploaded',
+      title: 'Lab Report Ready for Review',
+      message: `A ${document.document_type} is ready for your review${document.report_details?.laboratory ? ` from ${document.report_details.laboratory}` : ''}.`,
+      priority: document.report_details?.priority || 'normal',
+      metadata: {
+        document_id: document._id,
+        document_type: document.document_type,
+        patient_id: document.patient_id,
+        file_name: document.file_name
+      }
+    });
+
+    // Update notification timestamp
+    document.notifications.doctor_notified_at = new Date();
+    await document.save();
+    
+    console.log(`Doctor notification sent for document ${document._id}`);
+  } catch (error) {
+    console.error('Error sending doctor notification:', error);
+  }
+}
 
 // @desc    Get all medical documents with filters
 // @route   GET /api/medical-documents
@@ -202,8 +258,25 @@ exports.createDocument = async (req, res) => {
         uploaded_by,
         document_type = 'other',
         description = '',
-        tags = []
+        tags = [],
+        metadata,
+        notify_patient = true,
+        notify_doctor = true
       } = req.body;
+
+      // Parse metadata if it's a string
+      let reportDetails = {};
+      if (metadata) {
+        const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+        reportDetails = {
+          test_date: parsedMetadata.test_date || null,
+          laboratory: parsedMetadata.laboratory || '',
+          test_category: parsedMetadata.test_category || '',
+          priority: parsedMetadata.priority || 'normal',
+          ordering_doctor: parsedMetadata.ordering_doctor || '',
+          report_notes: parsedMetadata.report_notes || ''
+        };
+      }
 
       // Auto-categorize document
       const category = MedicalDocument.autoCategorizeDocument(document_type);
@@ -223,8 +296,23 @@ exports.createDocument = async (req, res) => {
         tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
         ocr_extracted_text: '',
         ai_detected_conditions: [],
-        is_ai_verified: false
+        is_ai_verified: false,
+        report_details: reportDetails,
+        notifications: {
+          notify_patient: notify_patient === 'true' || notify_patient === true,
+          notify_doctor: notify_doctor === 'true' || notify_doctor === true,
+          patient_notified_at: null,
+          doctor_notified_at: null
+        }
       });
+
+      // Send notifications if enabled
+      if (document.notifications.notify_patient) {
+        await sendPatientNotification(patient_id, document);
+      }
+      if (document.notifications.notify_doctor && reportDetails.ordering_doctor) {
+        await sendDoctorNotification(reportDetails.ordering_doctor, document);
+      }
 
       return res.status(201).json({
         success: true,
@@ -687,3 +775,119 @@ exports.logDownload = async (req, res) => {
     });
   }
 };
+
+// @desc    Get lab reporter dashboard statistics
+// @route   GET /api/medical-documents/lab-reporter-stats
+// @access  Private
+exports.getLabReporterStats = async (req, res) => {
+  try {
+    const { uploaded_by } = req.query;
+
+    // Get total uploads
+    const totalUploads = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get uploads this week
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const uploadsThisWeek = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      uploaded_at: { $gte: oneWeekAgo },
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get pending verification (assuming is_ai_verified: false means pending)
+    const pendingVerification = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      is_ai_verified: false,
+      is_active: true,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get verified today
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const verifiedToday = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      is_ai_verified: true,
+      updated_at: { $gte: startOfDay },
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get rejected reports (is_active: false)
+    const rejectedReports = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      is_active: false,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get recent uploads
+    const recentUploads = await MedicalDocument.find({
+      is_deleted: false,
+      ...(uploaded_by && { uploaded_by })
+    })
+      .sort({ uploaded_at: -1 })
+      .limit(10)
+      .select('patient_id document_type file_name file_size uploaded_at is_ai_verified is_active report_details');
+
+    // Format recent uploads
+    const formattedUploads = recentUploads.map(doc => {
+      let status = 'pending';
+      if (!doc.is_active) status = 'rejected';
+      else if (doc.is_ai_verified) status = 'verified';
+      
+      return {
+        id: doc._id,
+        patientName: doc.patient_id,
+        patientId: doc.patient_id,
+        reportType: doc.document_type,
+        uploadedDate: getTimeAgo(doc.uploaded_at),
+        status,
+        fileSize: formatFileSize(doc.file_size),
+        laboratory: doc.report_details?.laboratory || 'N/A'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUploads,
+        uploadsThisWeek,
+        pendingVerification,
+        verifiedToday,
+        rejectedReports,
+        recentUploads: formattedUploads
+      }
+    });
+  } catch (error) {
+    console.error('Get lab reporter stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving statistics',
+      error: error.message
+    });
+  }
+};
+
+// Helper function to format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Helper function to get time ago
+function getTimeAgo(date) {
+  const now = new Date();
+  const seconds = Math.floor((now - new Date(date)) / 1000);
+  
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+  if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+  return new Date(date).toLocaleDateString();
+}

@@ -46,15 +46,11 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userData }: { active: string; userData: any }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/lab-reporter/dashboard" },
     { id: "upload", label: "Upload Reports", icon: Upload, href: "/lab-reporter/upload" },
-    { id: "my-uploads", label: "My Uploads", icon: List, href: "/lab-reporter/my-uploads" },
-    { id: "pending", label: "Pending Review", icon: AlertCircle, href: "/lab-reporter/pending" },
-    { id: "verified", label: "Verified Reports", icon: CheckCircle2, href: "/lab-reporter/verified" },
-    { id: "analytics", label: "Analytics", icon: HelpCircle, href: "/lab-reporter/analytics" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/lab-reporter/settings" },
+    
   ];
 
   return (
@@ -62,10 +58,15 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-teal-600 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Lab Technician" size={48} />
+          <Avatar name={userData?.name || "Lab Reporter"} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">Lab Technician</p>
-            <p className="text-xs text-teal-200">Lab Reporter</p>
+            <p className="font-semibold text-white">{userData?.name || "Loading..."}</p>
+            <p className="text-xs text-teal-200">{userData?.role === 'lab_reporter' ? 'Lab Reporter' : 'Lab Technician'}</p>
+            {userData?.id && (
+              <span className="mt-1 inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-semibold text-white">
+                ID #{userData.id.slice(-6).toUpperCase()}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -157,129 +158,20 @@ function UploadZone({
   );
 }
 
-// Patient Search Component
-function PatientSearch({
-  onSelectPatient,
-}: {
-  onSelectPatient: (patient: any) => void;
-}) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showResults, setShowResults] = useState(false);
-
-  const mockPatients = [
-    { id: "P-12847", name: "John Doe", age: 45, gender: "M", bloodGroup: "O+", allergies: "Penicillin" },
-    { id: "P-13892", name: "Jane Smith", age: 32, gender: "F", bloodGroup: "A+", allergies: "None" },
-    { id: "P-14523", name: "Mike Wilson", age: 58, gender: "M", bloodGroup: "B+", allergies: "None" },
-    { id: "P-15678", name: "Sarah Brown", age: 29, gender: "F", bloodGroup: "AB+", allergies: "Latex" },
-  ];
-
-  const filteredPatients = mockPatients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div className="relative">
-      <label className="mb-2 block text-sm font-medium text-gray-700">
-        Search Patient *
-      </label>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setShowResults(true);
-          }}
-          onFocus={() => setShowResults(true)}
-          placeholder="🔍 Search by name, ID, or phone..."
-          className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-3 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-        />
-      </div>
-
-      {/* Autocomplete Dropdown */}
-      {showResults && searchTerm && filteredPatients.length > 0 && (
-        <div className="absolute z-10 mt-2 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
-          {filteredPatients.map((patient) => (
-            <button
-              key={patient.id}
-              onClick={() => {
-                onSelectPatient(patient);
-                setSearchTerm("");
-                setShowResults(false);
-              }}
-              className="w-full border-b border-gray-100 p-4 text-left transition hover:bg-gray-50 last:border-b-0"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar name={patient.name} size={40} />
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{patient.name}</p>
-                  <p className="text-sm text-gray-600">
-                    ID: {patient.id} | Age: {patient.age} | {patient.gender}
-                  </p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Selected Patient Card Component
-function SelectedPatientCard({
-  patient,
-  onRemove,
-}: {
-  patient: any;
-  onRemove: () => void;
-}) {
-  const dob = "15/03/1980";
-  
-  return (
-    <div className="rounded-lg border border-gray-300 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">Selected Patient</h3>
-        <button
-          onClick={onRemove}
-          className="rounded p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="flex items-start gap-3">
-        <Avatar name={patient.name} size={48} />
-        <div className="flex-1">
-          <p className="font-semibold text-gray-900">{patient.name}</p>
-          <p className="text-sm text-gray-600">ID: {patient.id}</p>
-          <p className="text-sm text-gray-600">DOB: {dob} ({patient.age} years)</p>
-          <p className="text-sm text-gray-600">Blood Group: {patient.bloodGroup}</p>
-          {patient.allergies !== "None" && (
-            <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-red-600">
-              <AlertCircle className="h-4 w-4" />
-              ⚠️ Allergies: {patient.allergies}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+// No separate patient search component needed - using simple text input
 
 // File Preview Component
 function FilePreview({
   file,
   onRemove,
 }: {
-  file: { name: string; size: number; warning?: string };
+  file: File;
   onRemove: () => void;
 }) {
   const fileExt = file.name.split(".").pop()?.toLowerCase();
   const isImage = ["jpg", "jpeg", "png"].includes(fileExt || "");
   const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+  const warning = file.size < 500000 ? "Low resolution (review recommended)" : undefined;
 
   return (
     <div className="rounded-lg border border-gray-300 bg-white p-4">
@@ -303,10 +195,10 @@ function FilePreview({
       <div className="h-32 rounded-lg bg-gray-100 flex items-center justify-center">
         <p className="text-sm text-gray-500">[Preview thumbnail]</p>
       </div>
-      {file.warning ? (
+      {warning ? (
         <p className="mt-2 flex items-center gap-1 text-sm text-orange-600">
           <AlertCircle className="h-4 w-4" />
-          {file.warning}
+          {warning}
         </p>
       ) : (
         <p className="mt-2 flex items-center gap-1 text-sm text-green-600">
@@ -318,124 +210,16 @@ function FilePreview({
   );
 }
 
-// Bulk Upload Modal
-function BulkUploadModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const [bulkFiles, setBulkFiles] = useState([
-    { name: "blood_test_p12847.pdf", patient: "Auto", status: "✓" },
-    { name: "xray_p13892.jpg", patient: "Manual", status: "⚠️" },
-    { name: "mri_p14523.pdf", patient: "Auto", status: "✓" },
-    { name: "ultrasound_p12847.pdf", patient: "Auto", status: "✓" },
-    { name: "ecg_p15678.pdf", patient: "Manual", status: "⚠️" },
-  ]);
 
-  if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            📋 Bulk Upload Mode
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <p className="mb-6 text-gray-600">Upload multiple reports at once</p>
-
-        {/* Bulk Drop Zone */}
-        <div className="mb-6 rounded-xl border-2 border-dashed border-teal-600 bg-gray-50 p-8 text-center">
-          <Upload className="mx-auto mb-3 h-12 w-12 text-teal-600" />
-          <p className="text-gray-700 font-medium">Drag multiple files or folders here</p>
-        </div>
-
-        {/* Template Download */}
-        <div className="mb-6 rounded-lg bg-blue-50 p-4">
-          <p className="mb-2 text-sm font-medium text-gray-700">Template Download:</p>
-          <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
-            <Download className="h-4 w-4" />
-            📥 Download CSV Template for batch metadata
-          </button>
-        </div>
-
-        {/* Bulk Upload Queue */}
-        <div className="mb-6">
-          <h3 className="mb-3 font-semibold text-gray-900">
-            Bulk Upload Queue ({bulkFiles.length} files)
-          </h3>
-          <div className="space-y-2 rounded-lg border border-gray-300 bg-white p-4">
-            {bulkFiles.map((file, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between border-b border-gray-100 py-2 last:border-b-0"
-              >
-                <span className="text-sm text-gray-700">
-                  {idx + 1}. {file.name}
-                </span>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-sm ${
-                      file.patient === "Auto" ? "text-green-600" : "text-orange-600"
-                    }`}
-                  >
-                    [Patient: {file.patient}]
-                  </span>
-                  <span>{file.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* File Naming Convention Info */}
-        <div className="mb-6 rounded-lg bg-gray-100 p-4">
-          <div className="flex items-start gap-2">
-            <Info className="h-5 w-5 text-gray-600 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-gray-700">File Naming Convention:</p>
-              <p className="text-sm text-gray-600 mt-1">
-                reporttype_patientid_date.extension
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Example: bloodtest_P12847_20260116.pdf
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            Cancel Bulk Upload
-          </button>
-          <button className="flex-1 rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white transition hover:bg-teal-700">
-            Process All Files
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Main Upload Page Component
 export default function LabReporterUpload() {
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; size: number; warning?: string }>>([]);
+  const { user } = useUser();
+  const [patientName, setPatientName] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<Array<File>>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  
   const [notificationCount] = useState(5);
 
   // Form state
@@ -448,6 +232,65 @@ export default function LabReporterUpload() {
   const [notes, setNotes] = useState("");
   const [notifyPatient, setNotifyPatient] = useState(true);
   const [notifyDoctor, setNotifyDoctor] = useState(true);
+
+  // Doctors list from database
+  const [doctors, setDoctors] = useState<Array<{ id: string; name: string; specialization?: string }>>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+
+  // Fetch user data from database
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user]);
+
+  // Fetch doctors on component mount
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/users/profile?clerkId=${user?.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setUserData(data.user);
+      } else {
+        // Fallback to Clerk data
+        setUserData({
+          name: user?.fullName || user?.firstName + ' ' + user?.lastName,
+          email: user?.primaryEmailAddress?.emailAddress,
+          id: user?.id,
+          role: 'lab_reporter'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Fallback to Clerk data
+      setUserData({
+        name: user?.fullName || user?.firstName + ' ' + user?.lastName,
+        email: user?.primaryEmailAddress?.emailAddress,
+        id: user?.id,
+        role: 'lab_reporter'
+      });
+    }
+  };
+
+  const fetchDoctors = async () => {
+    setLoadingDoctors(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/users/doctors');
+      const data = await response.json();
+      if (data.success) {
+        setDoctors(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
 
   const reportTypes = [
     "Blood Test",
@@ -463,13 +306,9 @@ export default function LabReporterUpload() {
 
   const laboratories = ["Hematology", "Radiology", "Cardiology", "Pathology", "Microbiology"];
   const categories = ["Routine", "Follow-up", "Emergency", "Pre-operative"];
-  const doctors = ["Dr. Sarah Lee", "Dr. John Smith", "Dr. Emily Brown", "Dr. Mike Wilson"];
 
   const handleFilesSelected = (files: FileList) => {
-    const newFiles = Array.from(files).map((file) => {
-      const warning = file.size < 500000 ? "Low resolution (review recommended)" : undefined;
-      return { name: file.name, size: file.size, warning };
-    });
+    const newFiles = Array.from(files);
     setUploadedFiles([...uploadedFiles, ...newFiles]);
   };
 
@@ -487,15 +326,81 @@ export default function LabReporterUpload() {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    console.log("Submitting upload...");
-    // Handle form submission
+  const handleSubmit = async () => {
+    if (uploadedFiles.length === 0) {
+      alert('Please select at least one file to upload');
+      return;
+    }
+
+    if (!patientName.trim()) {
+      alert('Please enter patient name before uploading');
+      return;
+    }
+
+    // Upload each file
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      const file = uploadedFiles[i];
+      
+      try {
+        const formData = new FormData();
+        
+        formData.append('file', file);
+        formData.append('patient_id', patientName);
+        formData.append('uploaded_by', 'lab_reporter_id'); // Replace with actual lab reporter ID
+        formData.append('document_type', reportType || 'Lab Report');
+        formData.append('category', testCategory || 'lab_results');
+        formData.append('description', notes);
+        formData.append('notify_patient', notifyPatient.toString());
+        formData.append('notify_doctor', notifyDoctor.toString());
+        
+        const metadata = {
+          test_date: testDate,
+          laboratory: laboratory,
+          test_category: testCategory,
+          ordering_doctor: orderingDoctor,
+          priority: priority,
+          report_notes: notes
+        };
+        formData.append('metadata', JSON.stringify(metadata));
+
+        // Upload to backend (Cloudinary)
+        const uploadResponse = await fetch('http://localhost:5001/api/medical-documents/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await uploadResponse.json();
+
+        if (!data.success) {
+          alert(`Failed to upload ${file.name}: ${data.message}`);
+        } else {
+          console.log(`Successfully uploaded ${file.name} to Cloudinary`);
+        }
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        alert(`Error uploading ${file.name}. Please try again.`);
+      }
+    }
+
+    // Success
+    alert('All files uploaded successfully to Cloudinary!');
+    
+    // Reset form
+    setUploadedFiles([]);
+    setPatientName('');
+    setReportType('');
+    setTestDate('');
+    setLaboratory('');
+    setTestCategory('');
+    setPriority('normal');
+    setOrderingDoctor('');
+    setNotes('');
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="upload" />
+      <Sidebar active="upload" userData={userData} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
@@ -509,13 +414,7 @@ export default function LabReporterUpload() {
 
             {/* Right Section */}
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowBulkUpload(true)}
-                className="flex items-center gap-2 rounded-lg border border-teal-300 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-100"
-              >
-                <Upload className="h-4 w-4" />
-                Bulk Upload
-              </button>
+              
               <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
                 <Bell className="h-6 w-6" />
                 {notificationCount > 0 && (
@@ -551,19 +450,22 @@ export default function LabReporterUpload() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Left Column - Patient & Report Details */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Patient Selection */}
+              {/* Patient Name Input */}
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-lg font-bold text-gray-900">Patient Selection</h2>
-                <PatientSearch onSelectPatient={setSelectedPatient} />
-
-                {selectedPatient && (
-                  <div className="mt-4">
-                    <SelectedPatientCard
-                      patient={selectedPatient}
-                      onRemove={() => setSelectedPatient(null)}
-                    />
-                  </div>
-                )}
+                <h2 className="mb-4 text-lg font-bold text-gray-900">Patient Information</h2>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Patient Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    placeholder="Enter patient name..."
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    required
+                  />
+                </div>
               </div>
 
               {/* Report Details Form */}
@@ -693,12 +595,15 @@ export default function LabReporterUpload() {
                     <select
                       value={orderingDoctor}
                       onChange={(e) => setOrderingDoctor(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      disabled={loadingDoctors}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
-                      <option value="">Select doctor...</option>
+                      <option value="">
+                        {loadingDoctors ? 'Loading doctors...' : 'Select doctor...'}
+                      </option>
                       {doctors.map((doc) => (
-                        <option key={doc} value={doc}>
-                          {doc}
+                        <option key={doc.id} value={doc.name}>
+                          {doc.name} {doc.specialization ? `- ${doc.specialization}` : ''}
                         </option>
                       ))}
                     </select>
@@ -790,7 +695,7 @@ export default function LabReporterUpload() {
                   </button>
                   <button
                     onClick={handleSubmit}
-                    disabled={!selectedPatient || uploadedFiles.length === 0}
+                    disabled={uploadedFiles.length === 0}
                     className="w-full rounded-lg bg-teal-600 px-4 py-3 font-semibold text-white transition hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Upload & Submit
@@ -802,8 +707,7 @@ export default function LabReporterUpload() {
         </main>
       </div>
 
-      {/* Bulk Upload Modal */}
-      <BulkUploadModal isOpen={showBulkUpload} onClose={() => setShowBulkUpload(false)} />
+      
     </div>
   );
 }

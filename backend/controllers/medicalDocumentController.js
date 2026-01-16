@@ -206,7 +206,7 @@ exports.createDocument = async (req, res) => {
       } = req.body;
 
       // Auto-categorize document
-      const category = MedicalDocument.autoCategorizeDOcument(document_type);
+      const category = MedicalDocument.autoCategorizeDocument(document_type);
 
       // Create document in database
       const document = await MedicalDocument.create({

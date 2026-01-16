@@ -3,6 +3,12 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Debug: Log Cloudinary credentials (remove after testing)
+console.log('Cloudinary Config Check:');
+console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('API Key:', process.env.CLOUDINARY_API_KEY);
+console.log('API Secret:', process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : 'NOT SET');
+
 // Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

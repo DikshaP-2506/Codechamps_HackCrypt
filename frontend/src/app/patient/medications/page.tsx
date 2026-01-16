@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
   Activity,
   Pill,
-  Bell,
   Calendar,
   Folder,
   MessageCircle,
@@ -14,7 +14,6 @@ import {
   User,
   Settings,
   LogOut,
-  Search,
   BookOpen,
   Check,
   Clock,
@@ -28,9 +27,21 @@ import {
   Flame,
   ScanLine,
 } from "lucide-react";
+import { PatientTopBar } from "@/components/PatientTopBar";
 
 // Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className="rounded-full border border-gray-200 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -49,7 +60,7 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userName, userImage }: { active: string; userName: string; userImage?: string }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
     { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
@@ -68,9 +79,9 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-emerald-700 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Sarah Johnson" size={48} />
+          <Avatar name={userName} imageUrl={userImage} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">Sarah Johnson</p>
+            <p className="font-semibold text-white">{userName}</p>
             <p className="text-xs text-emerald-200">Patient</p>
           </div>
         </div>
@@ -711,12 +722,19 @@ function AddMedicationModal({
 
 // Main Medications Page Component
 export default function PatientMedications() {
+  const { signOut } = useAuth();
+  const { user } = useUser();
   const [notificationCount] = useState(5);
   const [filterTab, setFilterTab] = useState<"today" | "week" | "all">("today");
   const [showReminderSettings, setShowReminderSettings] = useState(false);
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<{ name: string } | undefined>();
-  const patientName = "Sarah Johnson";
+  const patientName = user?.fullName || "Patient";
+  const patientImage = user?.imageUrl;
+
+  const handleLogout = async () => {
+    await signOut({ redirectUrl: "/sign-in" });
+  };
 
   // Mock medications data
   const allMedications = [
@@ -798,47 +816,17 @@ export default function PatientMedications() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="medications" />
+      <Sidebar active="medications" userName={patientName} userImage={patientImage} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Search Bar */}
-            <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 w-96">
-              <Search className="h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search medications..."
-                className="flex-1 border-none bg-transparent text-sm outline-none"
-              />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Bell className="h-6 w-6" />
-                {notificationCount > 0 && (
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {notificationCount}
-                  </div>
-                )}
-              </button>
-
-              {/* Settings */}
-              <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Settings className="h-6 w-6" />
-              </button>
-
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-emerald-200">
-                <Avatar name={patientName} size={40} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <PatientTopBar
+          userName={patientName}
+          userImage={patientImage}
+          notificationCount={notificationCount}
+          onLogout={handleLogout}
+          searchPlaceholder="Search medications..."
+        />
 
         {/* Main Content */}
         <main className="p-8">

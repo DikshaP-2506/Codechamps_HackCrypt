@@ -6,11 +6,12 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)", 
   "/api/webhooks(.*)",
   "/auth/callback",
-  "/complete-profile"
+  "/complete-profile",
+  "/unauthorized"
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  // Allow public routes (sign-in, sign-up, webhooks, auth callback, complete-profile)
+  // Allow public routes (sign-in, sign-up, webhooks, auth callback, complete-profile, unauthorized)
   if (isPublicRoute(request)) {
     return NextResponse.next();
   }
@@ -22,6 +23,10 @@ export default clerkMiddleware(async (auth, request) => {
     const signInUrl = new URL("/sign-in", request.url);
     return NextResponse.redirect(signInUrl);
   }
+
+  // Note: Role-based protection is handled server-side in individual pages
+  // Middleware only handles authentication, not authorization
+  // This avoids Edge runtime limitations with database connections
 
   return NextResponse.next();
 });

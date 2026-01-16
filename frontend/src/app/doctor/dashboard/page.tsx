@@ -22,19 +22,17 @@ import {
   Activity,
   TrendingUp,
   TrendingDown,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
-  Upload,
-  UserPlus,
-  CalendarPlus,
-  X,
-  AlertCircle,
-  CheckCircle,
-  HelpCircle,
   Menu,
+  HelpCircle,
 } from "lucide-react";
+import {
+  DoctorPatientList,
+  DoctorAppointmentsToday,
+  DoctorPatientVitalsMonitor,
+  DoctorPrescriptionList,
+  PendingReminders,
+  DoctorStatsCard,
+} from "@/components/DoctorDashboardComponents";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
@@ -648,59 +646,8 @@ function PatientTable() {
 
 // Main Dashboard Component
 export default function DoctorDashboard() {
-  const [alertFilter, setAlertFilter] = useState<"All" | "Critical" | "High" | "Medium">("All");
-
-  const appointments = [
-    {
-      time: "09:00 AM",
-      name: "John Doe",
-      type: "Consultation" as const,
-      status: "Upcoming" as const,
-      video: true,
-    },
-    {
-      time: "10:30 AM",
-      name: "Sarah Johnson",
-      type: "Follow-up" as const,
-      status: "In Progress" as const,
-      video: false,
-    },
-    {
-      time: "01:15 PM",
-      name: "Michael Green",
-      type: "Therapy" as const,
-      status: "Upcoming" as const,
-      video: false,
-    },
-  ];
-
-  const alerts = [
-    {
-      severity: "Critical" as const,
-      name: "Sarah Johnson",
-      type: "Hypertensive Crisis",
-      metric: "BP: 180/110 mmHg",
-      time: "15 minutes ago",
-    },
-    {
-      severity: "High" as const,
-      name: "John Doe",
-      type: "Arrhythmia Risk",
-      metric: "HR: 128 bpm",
-      time: "30 minutes ago",
-    },
-    {
-      severity: "Medium" as const,
-      name: "Michael Green",
-      type: "Elevated Glucose",
-      metric: "GLU: 160 mg/dL",
-      time: "1 hour ago",
-    },
-  ];
-
-  const filteredAlerts = alerts.filter(
-    (a) => alertFilter === "All" || a.severity === alertFilter
-  );
+  const { user } = useUser();
+  const doctorId = user?.id || "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -710,139 +657,94 @@ export default function DoctorDashboard() {
       {/* Main Content */}
       <main className="md:ml-60">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Stats Row */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Total Patients"
-              value={247}
-              icon={<Users className="h-6 w-6 text-emerald-700" />}
-              subtitle="Active patients"
-              trend={{ type: "up", value: "+12%" }}
-            />
-            <StatCard
-              label="Today's Appointments"
-              value={8}
-              icon={<Calendar className="h-6 w-6 text-emerald-700" />}
-              subtitle="3 completed, 5 upcoming"
-            />
-            <StatCard
-              label="Pending Alerts"
-              value={5}
-              icon={<AlertTriangle className="h-6 w-6 text-emerald-700" />}
-              subtitle="Require attention"
-              severity="high"
-            />
-            <StatCard
-              label="Active Treatments"
-              value={142}
-              icon={<Activity className="h-6 w-6 text-emerald-700" />}
-              subtitle="Ongoing plans"
-            />
+          {/* Welcome Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome back, Dr. {user?.lastName || "Smith"}! 👋
+            </h1>
+            <p className="mt-2 text-gray-600">
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+
+          {/* Statistics Cards */}
+          <section className="mb-8">
+            <h2 className="mb-4 text-lg font-bold text-gray-900">Overview</h2>
+            <DoctorStatsCard />
           </section>
 
-          {/* Schedule + Alerts Row */}
-          <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Schedule (Left - 2/3) */}
-            <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Today's Appointments
-                </h2>
-                <button className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700 hover:underline">
-                  View All
-                </button>
-              </div>
-              {appointments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Calendar className="h-16 w-16 text-emerald-300" />
-                  <p className="mt-4 text-gray-500">No appointments scheduled</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {appointments.map((a, idx) => (
-                    <AppointmentCard key={idx} {...a} />
-                  ))}
-                </div>
-              )}
+          {/* Today's Appointments and Pending Reminders */}
+          <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <DoctorAppointmentsToday doctorId={doctorId} />
             </div>
-
-            {/* Alerts (Right - 1/3) */}
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Critical Alerts
-                </h2>
-                <button
-                  onClick={() => {
-                    const filters: (
-                      | "All"
-                      | "Critical"
-                      | "High"
-                      | "Medium"
-                    )[] = ["All", "Critical", "High", "Medium"];
-                    const currentIdx = filters.indexOf(alertFilter);
-                    setAlertFilter(
-                      filters[(currentIdx + 1) % filters.length]
-                    );
-                  }}
-                  className="flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-emerald-500"
-                >
-                  {alertFilter}
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </div>
-              {filteredAlerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                    <CheckCircle className="h-8 w-8 text-emerald-600" />
-                  </div>
-                  <p className="mt-3 text-sm text-gray-500">No pending alerts</p>
-                  <p className="text-xs text-gray-400">
-                    All patients are doing well!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredAlerts.map((a, idx) => (
-                    <AlertCard key={idx} {...a} />
-                  ))}
-                  {alerts.length > 3 && (
-                    <button className="mt-4 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100">
-                      View All Alerts
-                    </button>
-                  )}
-                </div>
-              )}
+            <div>
+              <PendingReminders />
             </div>
           </section>
 
-          {/* Quick Actions */}
-          <section className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <ActionCard
-              label="Add Patient"
-              icon={<UserPlus className="h-7 w-7" />}
-              gradient="bg-gradient-to-br from-emerald-600 to-emerald-700"
-            />
-            <ActionCard
-              label="New Prescription"
-              icon={<Pill className="h-7 w-7" />}
-              gradient="bg-gradient-to-br from-blue-600 to-blue-700"
-            />
-            <ActionCard
-              label="Schedule Appointment"
-              icon={<CalendarPlus className="h-7 w-7" />}
-              gradient="bg-gradient-to-br from-yellow-500 to-yellow-600"
-            />
-            <ActionCard
-              label="Upload Document"
-              icon={<Upload className="h-7 w-7" />}
-              gradient="bg-gradient-to-br from-purple-600 to-purple-700"
-            />
+          {/* Patient Management and Vitals Monitoring */}
+          <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <DoctorPatientList doctorId={doctorId} />
+            </div>
+            <div>
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 font-semibold text-gray-900">Quick Actions</h3>
+                <div className="space-y-3">
+                  <Link
+                    href="/doctor/patients"
+                    className="flex items-center gap-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+                  >
+                    <Users className="h-5 w-5" />
+                    View All Patients
+                  </Link>
+                  <Link
+                    href="/doctor/appointments"
+                    className="flex items-center gap-3 rounded-lg bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                  >
+                    <Calendar className="h-5 w-5" />
+                    Manage Appointments
+                  </Link>
+                  <Link
+                    href="/doctor/prescriptions"
+                    className="flex items-center gap-3 rounded-lg bg-purple-50 px-4 py-3 text-sm font-medium text-purple-700 transition hover:bg-purple-100"
+                  >
+                    <Pill className="h-5 w-5" />
+                    New Prescription
+                  </Link>
+                  <Link
+                    href="/doctor/analytics"
+                    className="flex items-center gap-3 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 transition hover:bg-amber-100"
+                  >
+                    <BarChart2 className="h-5 w-5" />
+                    View Analytics
+                  </Link>
+                </div>
+              </div>
+            </div>
           </section>
 
-          {/* Patient Table */}
-          <section className="mt-8">
-            <PatientTable />
+          {/* Information Section */}
+          <section className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                <TrendingUp className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="mb-2 font-bold text-gray-900">Patient Management Tips</h3>
+                <p className="text-gray-700">
+                  Stay on top of your patient appointments and health metrics. Use the
+                  dashboard to monitor vitals, manage prescriptions, and track patient
+                  progress efficiently. 📊
+                </p>
+              </div>
+            </div>
           </section>
         </div>
       </main>

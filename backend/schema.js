@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const PatientProfile = require('./models/PatientProfile');
 const PhysicalVitals = require('./models/PhysicalVitals');
@@ -8,7 +9,8 @@ const Notification = require('./models/Notification');
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/healthcare';
+    const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/healthcare';
+    console.log('🔗 Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
     console.log('✅ MongoDB Connected Successfully\n');
   } catch (error) {
@@ -68,57 +70,55 @@ const getCollectionStats = async (collectionName) => {
   }
 };
 
-// Main function to display all schemas
+// Main function to display all collections and sample data
 const displayAllSchemas = async () => {
   await connectDB();
 
-  const models = [
-    { name: 'PatientProfile', model: PatientProfile, collection: 'patients' },
-    { name: 'PhysicalVitals', model: PhysicalVitals, collection: 'physical_vitals' },
-    { name: 'Prescription', model: Prescription, collection: 'prescription' },
-    { name: 'Appointment', model: Appointment, collection: 'appointments' },
-    { name: 'Notification', model: Notification, collection: 'notifications' }
-  ];
-
   console.log('═══════════════════════════════════════════════════════════════');
-  console.log('         MONGODB COLLECTIONS & SCHEMAS');
+  console.log('         MONGODB COLLECTIONS & SAMPLE DOCUMENTS');
   console.log('═══════════════════════════════════════════════════════════════\n');
 
-  for (const { name, model, collection } of models) {
-    console.log(`\n📊 ${name.toUpperCase()}`);
-    console.log('─'.repeat(70));
-    console.log(`Collection: ${collection}`);
-    
-    // Get collection stats
-    const stats = await getCollectionStats(collection);
-    console.log(`Documents: ${stats.count} | Size: ${stats.size} | Avg Doc Size: ${stats.avgDocSize}`);
-    
-    console.log('\n📋 SCHEMA:');
-    const schema = getSchemaInfo(model);
-    console.table(schema);
-    
-    // Get sample data
-    const samples = await getSampleData(model, 1);
-    if (samples.length > 0) {
-      console.log('\n📄 SAMPLE DOCUMENT:');
-      console.log(JSON.stringify(samples[0], null, 2));
-    } else {
-      console.log('\n📄 SAMPLE DOCUMENT: No data found');
-    }
-    
-    console.log('\n' + '═'.repeat(70));
-  }
-
   // Get all collections in database
-  console.log('\n\n📚 ALL COLLECTIONS IN DATABASE:');
-  console.log('─'.repeat(70));
+  console.log('📚 ALL COLLECTIONS IN DATABASE:\n');
   const collections = await mongoose.connection.db.listCollections().toArray();
   collections.forEach((col, index) => {
     console.log(`${index + 1}. ${col.name}`);
   });
 
+  console.log('\n' + '═'.repeat(70));
+  console.log('\n📄 SAMPLE DOCUMENTS FROM EACH COLLECTION:\n');
+  console.log('═'.repeat(70));
+
+  // Get sample document from each collection
+  for (const col of collections) {
+    const collectionName = col.name;
+    console.log(`\n\n📊 Collection: ${collectionName.toUpperCase()}`);
+    console.log('─'.repeat(70));
+    
+    try {
+      // Get collection stats
+      const stats = await getCollectionStats(collectionName);
+      console.log(`Documents: ${stats.count} | Size: ${stats.size}`);
+      
+      // Get one sample document
+      const sample = await mongoose.connection.db.collection(collectionName).findOne();
+      
+      if (sample) {
+        console.log('\nSample Document:');
+        console.log(JSON.stringify(sample, null, 2));
+      } else {
+        console.log('\nSample Document: No data found in this collection');
+      }
+    } catch (error) {
+      console.log(`\nError fetching from ${collectionName}: ${error.message}`);
+    }
+  }
+
+  console.log('\n\n' + '═'.repeat(70));
+  console.log(`\n✅ Total Collections: ${collections.length}`);
+  
   mongoose.connection.close();
-  console.log('\n✅ Database connection closed');
+  console.log('✅ Database connection closed\n');
 };
 
 // Run the script

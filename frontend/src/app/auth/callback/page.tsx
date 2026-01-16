@@ -55,7 +55,7 @@ export default async function AuthCallbackPage() {
           name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.emailAddresses[0].emailAddress.split('@')[0],
           firstName: clerkUser.firstName || undefined,
           lastName: clerkUser.lastName || undefined,
-          role: "doctor", // Default role for sign-in users
+          role: "patient", // Default role changed to patient
           photoUrl: clerkUser.imageUrl,
           isActive: true,
           lastLogin: new Date(),
@@ -83,6 +83,7 @@ export default async function AuthCallbackPage() {
     case "lab_reporter":
       redirect("/lab-reporter/dashboard");
     default:
-      redirect("/doctor/dashboard");
+      // Default to patient dashboard for unknown roles
+      redirect("/patient/dashboard");
   }
 }

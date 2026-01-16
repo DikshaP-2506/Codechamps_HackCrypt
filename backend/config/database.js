@@ -1,8 +1,14 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+  if (!uri) {
+    throw new Error('MongoDB connection string not found. Set MONGODB_URI (preferred) or MONGO_URI in your environment.');
+  }
+
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+    const conn = await mongoose.connect(uri, {
       // These options are no longer needed in Mongoose 6+
       // but included for backwards compatibility
     });

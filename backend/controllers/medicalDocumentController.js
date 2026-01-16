@@ -1,6 +1,8 @@
 const MedicalDocument = require('../models/MedicalDocument');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 const Notification = require('../models/Notification');
+const PatientProfile = require('../models/PatientProfile');
+const mongoose = require('mongoose');
 
 // Helper function to send notification to patient
 async function sendPatientNotification(patientId, document) {
@@ -124,7 +126,7 @@ exports.getAllDocuments = async (req, res) => {
   }
 };
 
-// @desc    Get documents by patient ID
+// @desc    Get documents by patient identifier (supports clerk_user_id or MongoDB _id)
 // @route   GET /api/medical-documents/patient/:patientId
 // @access  Private
 exports.getDocumentsByPatientId = async (req, res) => {
@@ -132,24 +134,104 @@ exports.getDocumentsByPatientId = async (req, res) => {
     const { patientId } = req.params;
     const { document_type, category, limit = 50 } = req.query;
 
-    const filter = {
-      patient_id: patientId,
-      is_deleted: false,
-      is_active: true
+    console.log('Fetching documents for patientId:', patientId);
+
+    // Normalize identifier: prefer clerk_user_id, map from MongoDB _id when needed
+    let clerkId = null;
+    try {
+      if (typeof patientId === 'string' && patientId.startsWith('user_')) {
+        clerkId = patientId;
+      } else if (/^[a-f0-9]{24}$/i.test(patientId)) {
+        // Attempt to resolve via PatientProfile
+        let patient = null;
+        try {
+          patient = await PatientProfile.findById(patientId).select('clerk_user_id user_id').lean();
+        } catch (_) {}
+
+        if (patient && patient.clerk_user_id) {
+          clerkId = patient.clerk_user_id;
+          console.log('Mapped Mongo _id to clerk_user_id via PatientProfile:', clerkId);
+        } else if (patient && patient.user_id) {
+          // Fallback: resolve via users collection using stored user_id
+          const usersCollection = mongoose.connection.collection('users');
+          const userDoc = await usersCollection.findOne({ _id: patient.user_id });
+          if (userDoc && userDoc.clerk_user_id) {
+            clerkId = userDoc.clerk_user_id;
+            console.log('Mapped via users.user_id to clerk_user_id:', clerkId);
+          }
+        } else {
+          // Final fallback: try users collection with provided _id
+          const usersCollection = mongoose.connection.collection('users');
+          let lookupId = null;
+          try { lookupId = new mongoose.Types.ObjectId(patientId); } catch (_) {}
+          if (lookupId) {
+            const userDoc2 = await usersCollection.findOne({ _id: lookupId });
+            if (userDoc2 && userDoc2.clerk_user_id) {
+              clerkId = userDoc2.clerk_user_id;
+              console.log('Mapped via users._id to clerk_user_id:', clerkId);
+            }
+          }
+        }
+      }
+    } catch (mapErr) {
+      console.warn('PatientId mapping error:', mapErr.message);
+    }
+
+    // Base filter: include documents not marked deleted; be lenient on is_active
+    const baseFilter = {
+      is_deleted: { $ne: true }
     };
+    if (document_type) baseFilter.document_type = document_type;
+    if (category) baseFilter.category = category;
 
-    if (document_type) filter.document_type = document_type;
-    if (category) filter.category = category;
+    let documents = [];
 
-    const documents = await MedicalDocument.find(filter)
-      .sort({ uploaded_at: -1 })
-      .limit(parseInt(limit))
-      .select('-access_logs');
+    // Primary query by clerk_user_id when available
+    if (clerkId) {
+      const filterByClerk = { ...baseFilter, patient_id: clerkId };
+      documents = await MedicalDocument.find(filterByClerk)
+        .sort({ uploaded_at: -1 })
+        .limit(parseInt(limit))
+        .select('-access_logs');
+      console.log(`Query by clerk_user_id=${clerkId}: ${documents.length} documents`);
+    }
+
+    // Fallback: direct match using provided patientId (supports legacy data)
+    if (!documents.length) {
+      const filterByStringId = { ...baseFilter, patient_id: patientId };
+      const altDocs = await MedicalDocument.find(filterByStringId)
+        .sort({ uploaded_at: -1 })
+        .limit(parseInt(limit))
+        .select('-access_logs');
+      if (altDocs.length) {
+        documents = altDocs;
+        console.log(`Fallback by patientId=${patientId}: ${documents.length} documents`);
+      }
+    }
+
+    // Fallback: ObjectId-based match when patient_id stored as ObjectId
+    if (!documents.length && /^[a-f0-9]{24}$/i.test(patientId)) {
+      let objId = null;
+      try { objId = new mongoose.Types.ObjectId(patientId); } catch (_) {}
+      if (objId) {
+        const filterByObjId = { ...baseFilter, patient_id: objId };
+        const idDocs = await MedicalDocument.find(filterByObjId)
+          .sort({ uploaded_at: -1 })
+          .limit(parseInt(limit))
+          .select('-access_logs');
+        if (idDocs.length) {
+          documents = idDocs;
+          console.log(`ObjectId patient_id match: ${documents.length} documents`);
+        }
+      }
+    }
+
+    console.log(`Found ${documents.length} documents for request identifier: ${patientId}`);
 
     res.status(200).json({
       success: true,
       count: documents.length,
-      patient_id: patientId,
+      patient_id: clerkId || patientId,
       data: documents
     });
   } catch (error) {
@@ -193,12 +275,14 @@ exports.getDocumentsByUploader = async (req, res) => {
     });
   }
 };
+
+// @desc    Get single document by ID with access log
 // @route   GET /api/medical-documents/:id
 // @access  Private
 exports.getDocumentById = async (req, res) => {
   try {
     const { id } = req.params;
-      });
+    const { user_id, ip_address } = req.query;
 
     const document = await MedicalDocument.findById(id);
 
@@ -383,9 +467,6 @@ exports.updateDocument = async (req, res) => {
       document_type,
       category,
       ocr_extracted_text,
-      ai_detected_conditions,
-      is_ai_verified,
-      updated_by,
       updated_by,
       ip_address
     } = req.body;
@@ -808,16 +889,16 @@ exports.getLabReporterStats = async (req, res) => {
     })
       .sort({ uploaded_at: -1 })
       .limit(10)
-      .select('patient_id document_type file_name file_size uploaded_at is_ai_verified is_active report_details');
-
-    // Format recent uploads
-    const formattedUploads = recentUploads.map(doc => {
-      let status = 'pending';ctive report_details');
+      .select('patient_id document_type file_name file_size uploaded_at is_active report_details');
 
     // Format recent uploads
     const formattedUploads = recentUploads.map(doc => {
       let status = 'active';
-      if (!doc.is_active) status = 'inactive
+      if (!doc.is_active) status = 'inactive';
+      
+      return {
+        id: doc._id,
+        patientName: doc.patient_id,
         patientId: doc.patient_id,
         reportType: doc.document_type,
         uploadedDate: getTimeAgo(doc.uploaded_at),
@@ -832,9 +913,8 @@ exports.getLabReporterStats = async (req, res) => {
       data: {
         totalUploads,
         uploadsThisWeek,
-        pendingVerification,
-        verifiedToday,
-        rejectedReports,
+        activeDocuments,
+        inactiveReports,
         recentUploads: formattedUploads
       }
     });
@@ -844,8 +924,9 @@ exports.getLabReporterStats = async (req, res) => {
       success: false,
       message: 'Error retrieving statistics',
       error: error.message
-    });activeDocuments,
-        inactive
+    });
+  }
+};
 
 // Helper function to format file size
 function formatFileSize(bytes) {

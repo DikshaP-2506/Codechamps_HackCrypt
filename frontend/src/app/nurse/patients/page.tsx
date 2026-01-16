@@ -10,22 +10,16 @@ import {
   Calendar,
   Clipboard,
   Heart,
+  Search,
   Settings,
   LogOut,
   Bell,
-  Search,
   AlertTriangle,
   Activity,
-  TrendingUp,
-  TrendingDown,
-  ChevronDown,
-  MoreVertical,
-  Menu,
-  CheckCircle,
-  AlertCircle,
-  HelpCircle,
   Syringe,
-  Clock,
+  ArrowLeft,
+  Menu,
+  HelpCircle,
 } from "lucide-react";
 
 // Avatar Component
@@ -72,14 +66,9 @@ function Sidebar() {
   };
 
   const navItems = [
-    { label: "Dashboard", icon: Home, active: true, href: "/nurse/dashboard" },
+    { label: "Dashboard", icon: Home, active: false, href: "/nurse/dashboard" },
     { label: "Patient Data", icon: Activity, active: false, href: "/nurse/patient-data" },
-    { label: "All Patients", icon: Users, href: "/nurse/patients" },
-    { label: "Tasks", icon: Clipboard, href: "/nurse/tasks" },
-    { label: "Vitals Monitoring", icon: Heart, href: "/nurse/vitals" },
-    { label: "Medications", icon: Syringe, href: "/nurse/medications" },
-    { label: "Appointments", icon: Calendar, href: "/nurse/appointments" },
-    { label: "Settings", icon: Settings, href: "/nurse/settings" },
+    { label: "All Patients", icon: Users, active: true, href: "/nurse/patients" },
   ];
 
   return (
@@ -91,40 +80,40 @@ function Sidebar() {
             <Avatar name={userName} imageUrl={userImage} size={56} />
           </div>
           <div className="text-center">
-            <h3 className="text-base font-semibold text-white">
-              {userName}
-            </h3>
+            <h3 className="text-base font-semibold text-white">{userName}</h3>
             <p className="text-sm text-white/70">Registered Nurse</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, active, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
-              active
-                ? "bg-emerald-100/20 text-white"
-                : "text-white/70 hover:bg-emerald-700/40"
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        ))}
+      <nav className="flex-1 overflow-y-auto px-2 py-6">
+        <div className="space-y-2">
+          {navItems.map(({ label, icon: Icon, active, href }) => (
+            <Link key={label} href={href}>
+              <button
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
+                  active
+                    ? "bg-emerald-800 text-white"
+                    : "text-emerald-100 hover:bg-emerald-800/50"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{label}</span>
+              </button>
+            </Link>
+          ))}
+        </div>
       </nav>
 
       {/* Logout Button */}
-      <div className="border-t border-emerald-700 p-4">
-        <button 
+      <div className="border-t border-emerald-700 px-2 py-4">
+        <button
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-400 transition-all hover:bg-red-500 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-900/20"
         >
           <LogOut className="h-5 w-5" />
-          <span className="text-sm font-medium">Logout</span>
+          <span>Logout</span>
         </button>
       </div>
     </aside>
@@ -134,11 +123,10 @@ function Sidebar() {
 // Top Bar Component
 function TopBar() {
   const { user } = useUser();
-  const { signOut } = useClerk();
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
-  const alertCount = 3;
-  const userName = user?.fullName || "Nurse Sarah";
+  const { signOut } = useClerk();
+  const userName = user?.fullName || "Nurse";
   const userImage = user?.imageUrl;
 
   const handleLogout = async () => {
@@ -147,7 +135,7 @@ function TopBar() {
   };
 
   return (
-    <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
+    <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm md:ml-60">
       <div className="flex items-center justify-between px-4 py-4 sm:px-6">
         {/* Left: Search */}
         <div className="flex items-center gap-3 flex-1">
@@ -158,7 +146,7 @@ function TopBar() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Search patients, tasks..."
+              placeholder="Search patients..."
               className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
             />
           </div>
@@ -167,16 +155,9 @@ function TopBar() {
         {/* Right: Actions */}
         <div className="flex items-center gap-4">
           {/* Alert Bell */}
-          <div className="relative">
-            <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-              <Bell className="h-6 w-6" />
-            </button>
-            {alertCount > 0 && (
-              <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white animate-pulse-soft">
-                {alertCount}
-              </div>
-            )}
-          </div>
+          <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
+            <Bell className="h-6 w-6" />
+          </button>
 
           {/* Settings */}
           <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:rotate-45 duration-300">
@@ -226,217 +207,20 @@ function TopBar() {
   );
 }
 
-// Stat Card Component
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  subtitle,
-  severity,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  subtitle: string;
-  severity?: "critical" | "high" | "medium";
-}) {
-  const numberColor =
-    severity === "critical"
-      ? "text-red-500"
-      : severity === "high"
-      ? "text-yellow-500"
-      : "text-emerald-700";
-
-  return (
-    <div className="flex h-[140px] flex-col justify-between rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500 hover:shadow-lg">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wider text-gray-600">
-          {label}
-        </span>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-          {Icon}
-        </div>
-      </div>
-      <div>
-        <div className={`font-mono text-3xl font-bold ${numberColor}`}>
-          {value}
-        </div>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs sm:text-sm text-gray-500">{subtitle}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Task Card Component
-function TaskCard({
-  patientName,
-  taskType,
-  time,
-  status,
-}: {
-  patientName: string;
-  taskType: string;
-  time: string;
-  status: "Pending" | "Completed";
-}) {
-  const [isCompleted, setIsCompleted] = useState(status === "Completed");
-  
-  const statusColor = isCompleted
-    ? "bg-emerald-100 text-emerald-700"
-    : "bg-yellow-100 text-yellow-700";
-
-  return (
-    <div className="mb-3 flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all hover:border-gray-300 hover:bg-white hover:shadow-md">
-      {/* Patient Avatar */}
-      <Avatar name={patientName} size={40} />
-
-      {/* Task Info */}
-      <div className="flex-1 min-w-0">
-        <div className="truncate text-sm font-semibold text-gray-900">
-          {patientName}
-        </div>
-        <div className="mt-1 text-xs text-gray-600">{taskType}</div>
-      </div>
-
-      {/* Time */}
-      <div className="flex items-center gap-1 text-gray-600 min-w-fit">
-        <Clock className="h-4 w-4" />
-        <span className="text-xs font-medium">{time}</span>
-      </div>
-
-      {/* Status Badge */}
-      <span
-        className={`inline-block rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${statusColor}`}
-      >
-        {isCompleted ? "Completed" : "Pending"}
-      </span>
-
-      {/* Mark Done Button */}
-      {!isCompleted && (
-        <button
-          onClick={() => setIsCompleted(true)}
-          className="rounded-md bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700"
-        >
-          Mark Done
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Patient Card Component
-function PatientCard({
-  name,
-  age,
-  gender,
-  room,
-  conditions,
-}: {
-  name: string;
-  age: number;
-  gender: string;
-  room: string;
-  conditions: string[];
-}) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <Avatar name={name} size={48} />
-          <div>
-            <h3 className="font-semibold text-gray-900">{name}</h3>
-            <p className="text-xs text-gray-600">Room {room}</p>
-          </div>
-        </div>
-        <button className="rounded-md p-2 text-gray-600 transition hover:bg-gray-100">
-          <MoreVertical className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mb-3 space-y-1 text-xs text-gray-600">
-        <p><span className="font-medium">Age:</span> {age} years</p>
-        <p><span className="font-medium">Gender:</span> {gender}</p>
-      </div>
-
-      <div className="mb-4 flex flex-wrap gap-1">
-        {conditions.map((condition) => (
-          <span
-            key={condition}
-            className="inline-block rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-700"
-          >
-            {condition}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex gap-2">
-        <button className="flex-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100">
-          View Profile
-        </button>
-        <button className="flex-1 rounded-md bg-emerald-600 px-2 py-2 text-xs font-medium text-white transition hover:bg-emerald-700">
-          Log Vitals
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Alert Card Component
-function AlertCard({
-  severity,
-  name,
-  message,
-  time,
-}: {
-  severity: "Critical" | "Warning";
-  name: string;
-  message: string;
-  time: string;
-}) {
-  const borderColor =
-    severity === "Critical"
-      ? "border-l-red-500 bg-red-50"
-      : "border-l-yellow-500 bg-yellow-50";
-
-  const iconColor =
-    severity === "Critical"
-      ? "text-red-500"
-      : "text-yellow-500";
-
-  return (
-    <div className={`mb-3 flex gap-3 rounded-lg border-l-4 p-4 ${borderColor}`}>
-      <div className={`flex-shrink-0 ${iconColor}`}>
-        {severity === "Critical" ? (
-          <AlertTriangle className="h-5 w-5" />
-        ) : (
-          <AlertCircle className="h-5 w-5" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900">{name}</p>
-        <p className="text-xs text-gray-700">{message}</p>
-        <p className="mt-1 text-xs text-gray-500">{time}</p>
-      </div>
-      <button className="flex-shrink-0 rounded-md bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100">
-        Review
-      </button>
-    </div>
-  );
-}
-
-// Main Dashboard Component
-export default function NurseDashboard() {
-  const [alertFilter, setAlertFilter] = useState<"All" | "Critical" | "Warning">("All");
+export default function AllPatientsPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [showVitalsModal, setShowVitalsModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [vitalsLoading, setVitalsLoading] = useState(false);
   const [showDocumentsModal, setShowDocumentsModal] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [showAllDataModal, setShowAllDataModal] = useState(false);
+  const [allDataLoading, setAllDataLoading] = useState(false);
+  const [allDataError, setAllDataError] = useState<string | null>(null);
+  const [allPatientData, setAllPatientData] = useState<any>(null);
   const [vitals, setVitals] = useState({
     systolic_bp: "",
     diastolic_bp: "",
@@ -456,20 +240,23 @@ export default function NurseDashboard() {
     const fetchPatients = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/patients?limit=1000');
+        console.log('Fetching patients from API...');
+        const response = await fetch("http://localhost:5000/api/patients/users/all");
+        console.log('Patients response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          console.log('Patient data from API:', data.data);
-          if (data.data && data.data.length > 0) {
-            console.log('First patient:', data.data[0]);
-            console.log('Has clerk_user_id?', data.data[0].clerk_user_id);
-          }
+          console.log('Patients data received:', data);
           setPatients(data.data || []);
         } else {
-          console.error('Failed to fetch patients');
+          console.error("Failed to fetch patients. Status:", response.status);
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          alert(`Failed to fetch patients: ${response.status}`);
         }
       } catch (error) {
-        console.error('Error fetching patients:', error);
+        console.error("Error fetching patients:", error);
+        alert("Error fetching patients: " + (error as any).message);
       } finally {
         setLoading(false);
       }
@@ -478,63 +265,9 @@ export default function NurseDashboard() {
     fetchPatients();
   }, []);
 
-  // Mock data for tasks
-  const tasks = [
-    {
-      patientName: "John Anderson",
-      taskType: "Check vitals",
-      time: "10:30 AM",
-      status: "Pending" as const,
-    },
-    {
-      patientName: "Maria Garcia",
-      taskType: "Administer medication",
-      time: "11:00 AM",
-      status: "Pending" as const,
-    },
-    {
-      patientName: "Robert Chen",
-      taskType: "Dressing change",
-      time: "09:45 AM",
-      status: "Completed" as const,
-    },
-    {
-      patientName: "Emma Wilson",
-      taskType: "Check wound",
-      time: "02:00 PM",
-      status: "Pending" as const,
-    },
-  ];
-
-  // Mock data for alerts
-  const alerts = [
-    {
-      severity: "Critical" as const,
-      name: "John Anderson (Room 301)",
-      message: "Blood pressure elevated - 165/95 mmHg",
-      time: "5 minutes ago",
-    },
-    {
-      severity: "Warning" as const,
-      name: "Emma Wilson (Room 304)",
-      message: "Temperature slightly elevated - 38.2°C",
-      time: "12 minutes ago",
-    },
-    {
-      severity: "Critical" as const,
-      name: "Robert Chen (Room 303)",
-      message: "Medication overdue - Next dose at 2:00 PM",
-      time: "2 minutes ago",
-    },
-  ];
-
-  const pendingTasks = tasks.filter(t => t.status === "Pending").length;
-  const allPatientsCount = patients.length;
-  const criticalAlerts = alerts.filter(a => a.severity === "Critical").length;
-  const activeTreatments = 12;
-
-  const filteredAlerts = alerts.filter(
-    (a) => alertFilter === "All" || a.severity === alertFilter
+  // Filter patients by search term
+  const filteredPatients = patients.filter((patient) =>
+    (patient.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleOpenVitalsModal = (patient: any) => {
@@ -558,6 +291,49 @@ export default function NurseDashboard() {
       measurement_method: "Manual Entry",
       notes: "",
     });
+
+    // Fetch all patient users + patient profiles and merge
+    useEffect(() => {
+      const fetchPatients = async () => {
+        try {
+          setLoading(true);
+          const [usersRes, profilesRes] = await Promise.all([
+            fetch("http://localhost:5000/api/patients/users/all"),
+            fetch("http://localhost:5000/api/patients/profiles/all"),
+          ]);
+
+          const usersData = usersRes.ok ? await usersRes.json() : { data: [] };
+          const profilesData = profilesRes.ok ? await profilesRes.json() : { data: [] };
+
+          const users = (usersData.data || []).filter((u: any) => u.role === "patient");
+          const profiles = (profilesData.data || []).filter((p: any) => !p.role || p.role === "patient");
+
+          const mergedRaw = [...users, ...profiles];
+          const seen = new Set<string>();
+          const deduped: any[] = [];
+
+          mergedRaw.forEach((p) => {
+            const key = p.clerk_user_id || p.clerkId || p.clerkUserId || p._id;
+            if (key) {
+              if (!seen.has(key)) {
+                seen.add(key);
+                deduped.push(p);
+              }
+            } else {
+              deduped.push(p);
+            }
+          });
+
+          setPatients(deduped);
+        } catch (error) {
+          console.error("Error fetching patients:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchPatients();
+    }, []);
   };
 
   const handleVitalsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -628,16 +404,13 @@ export default function NurseDashboard() {
     setShowDocumentsModal(true);
     
     // Fetch documents for this patient using clerk_user_id
-    const patientId = patient.clerk_user_id || patient._id;
-    console.log('Patient object:', patient);
-    console.log('Using patientId:', patientId);
-    console.log('clerk_user_id exists?', !!patient.clerk_user_id);
+    const clerkId = patient.clerk_user_id || patient.clerkId || patient.clerkUserId || patient._id;
     try {
       setDocumentsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/medical-documents/patient/${patientId}`);
+      // Use existing medical-documents route that resolves clerk ids
+      const response = await fetch(`http://localhost:5000/api/medical-documents/patient/${clerkId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('Documents fetched:', data);
         setDocuments(data.data || []);
       } else {
         console.error("Failed to fetch documents");
@@ -655,6 +428,53 @@ export default function NurseDashboard() {
     setDocuments([]);
   };
 
+  const handleOpenAllDataModal = async (patient: any) => {
+    setSelectedPatient(patient);
+    setShowAllDataModal(true);
+    setAllDataError(null);
+    
+    // Fetch all data for this patient using clerk_user_id
+    // Try multiple possible field names for clerk id
+    const clerkId = patient.clerk_user_id || patient.clerkId || patient.clerkUserId || patient._id;
+    console.log('Patient object:', patient);
+    console.log('Using clerkId:', clerkId);
+    
+    try {
+      setAllDataLoading(true);
+      
+      // Use new endpoint: /api/patients/:clerkId/all-data
+      const url = `http://localhost:5000/api/patients/${clerkId}/all-data`;
+      console.log('Fetching from URL:', url);
+      
+      const response = await fetch(url);
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Full response:', data);
+        console.log('Response data field:', data.data);
+        setAllPatientData(data.data || null);
+      } else {
+        console.error("Failed to fetch patient data. Status:", response.status);
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        setAllDataError(`Failed to fetch patient data: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error fetching patient data:", error);
+      setAllDataError("Error fetching patient data: " + (error as any).message);
+    } finally {
+      setAllDataLoading(false);
+    }
+  };
+
+  const handleCloseAllDataModal = () => {
+    setShowAllDataModal(false);
+    setSelectedPatient(null);
+    setAllPatientData(null);
+    setAllDataError(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
@@ -665,151 +485,72 @@ export default function NurseDashboard() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Page Header */}
           <section className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Nurse Dashboard</h1>
-            <p className="mt-1 text-gray-600">Today's Overview</p>
+            <h1 className="text-3xl font-bold text-gray-900">All Patients</h1>
+            <p className="mt-1 text-gray-600">Manage and view all patients in the system</p>
           </section>
 
-          {/* Stats Row */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="All Patients"
-              value={allPatientsCount}
-              icon={<Users className="h-6 w-6 text-emerald-700" />}
-              subtitle="Total patients"
+          {/* Search Bar */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search patients by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm placeholder-gray-500 transition focus:border-emerald-500 focus:outline-none"
             />
-            <StatCard
-              label="Today's Tasks"
-              value={pendingTasks}
-              icon={<Clipboard className="h-6 w-6 text-emerald-700" />}
-              subtitle="Pending tasks"
-            />
-            <StatCard
-              label="Critical Alerts"
-              value={criticalAlerts}
-              icon={<AlertTriangle className="h-6 w-6 text-emerald-700" />}
-              subtitle="Require attention"
-              severity="critical"
-            />
-            <StatCard
-              label="Active Treatments"
-              value={activeTreatments}
-              icon={<Activity className="h-6 w-6 text-emerald-700" />}
-              subtitle="In progress"
-            />
-          </section>
+          </div>
 
-          {/* Tasks + Alerts Row */}
-          <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Tasks (Left - 2/3) */}
-            <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Today's Tasks
-                </h2>
-                <button className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700 hover:underline">
-                  View All
-                </button>
-              </div>
-              {tasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <CheckCircle className="h-16 w-16 text-emerald-300" />
-                  <p className="mt-4 text-gray-500">No tasks scheduled</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {tasks.map((task, idx) => (
-                    <TaskCard key={idx} {...task} />
-                  ))}
-                </div>
-              )}
+          {/* Patients List */}
+          {loading ? (
+            <div className="text-center py-12 text-gray-600">Loading patients...</div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="text-center py-12 text-gray-600">
+              {patients.length === 0 ? "No patients found" : "No matching patients"}
             </div>
-
-            {/* Alerts (Right - 1/3) */}
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Alerts
-                </h2>
-                <button
-                  onClick={() => {
-                    const filters: ("All" | "Critical" | "Warning")[] = ["All", "Critical", "Warning"];
-                    const currentIdx = filters.indexOf(alertFilter);
-                    setAlertFilter(
-                      filters[(currentIdx + 1) % filters.length]
-                    );
-                  }}
-                  className="flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-emerald-500"
+          ) : (
+            <div className="space-y-3">
+              {filteredPatients.map((patient) => (
+                <div
+                  key={patient._id}
+                  className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-4 shadow-sm transition-all hover:border-emerald-500/70 hover:shadow-md md:flex-row md:items-center"
                 >
-                  {alertFilter}
-                  <ChevronDown className="h-3 w-3" />
-                </button>
-              </div>
-              {filteredAlerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                    <CheckCircle className="h-8 w-8 text-emerald-600" />
+                  <div className="flex items-center gap-3 min-w-[220px]">
+                    <Avatar name={patient.name || "Unknown"} size={44} />
+                    <div className="space-y-0.5">
+                      <h3 className="font-semibold text-gray-900 text-sm md:text-base">{patient.name || "Unknown Patient"}</h3>
+                      <p className="text-xs text-gray-600">ID: {patient._id.slice(-6)}</p>
+                      {patient.email && (
+                        <p className="text-xs text-gray-600 truncate max-w-[260px]">{patient.email}</p>
+                      )}
+                    </div>
                   </div>
-                  <p className="mt-3 text-sm text-gray-500">No alerts</p>
-                  <p className="text-xs text-gray-400">
-                    All patients are stable
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredAlerts.map((alert, idx) => (
-                    <AlertCard key={idx} {...alert} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
 
-          {/* All Patients Section */}
-          <section className="mt-8">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
-                All Patients
-              </h2>
-              <button className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700 hover:underline">
-                View All
-              </button>
-            </div>
-            {loading ? (
-              <div className="text-center py-8 text-gray-600">Loading patients...</div>
-            ) : patients.length === 0 ? (
-              <div className="text-center py-8 text-gray-600">No patients found</div>
-            ) : (
-              <div className="space-y-3">
-                {patients.map((patient) => (
-                  <div 
-                    key={patient._id} 
-                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar name={patient.name || "Unknown"} size={40} />
-                      <span className="font-semibold text-gray-900">
-                        {patient.name || "Unknown Patient"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleOpenVitalsModal(patient)}
-                        className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
-                      >
-                        Log Vitals
-                      </button>
-                      <button 
-                        onClick={() => handleOpenDocumentsModal(patient)}
-                        className="rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                      >
-                        View Documents
-                      </button>
-                    </div>
+                  <div className="flex-1" />
+
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <button
+                      onClick={() => handleOpenVitalsModal(patient)}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    >
+                      Log Vitals
+                    </button>
+                    <button
+                      onClick={() => handleOpenDocumentsModal(patient)}
+                      className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+                    >
+                      View Documents
+                    </button>
+                    <button
+                      onClick={() => handleOpenAllDataModal(patient)}
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                    >
+                      View All Data
+                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -1096,6 +837,162 @@ export default function NurseDashboard() {
               <div className="mt-6">
                 <button
                   onClick={handleCloseDocumentsModal}
+                  className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Patient Data Modal */}
+      {showAllDataModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Complete Patient Data - {selectedPatient?.name}</h2>
+              <button
+                onClick={handleCloseAllDataModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              {allDataLoading ? (
+                <div className="text-center py-12 text-gray-600">Loading patient data...</div>
+              ) : allDataError ? (
+                <div className="text-center py-12">
+                  <p className="text-red-600 font-medium mb-4">{allDataError}</p>
+                  <p className="text-sm text-gray-600">Please try again or contact support.</p>
+                </div>
+              ) : allPatientData ? (
+                <div className="space-y-8">
+                  {/* Statistics */}
+                  <section>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Total Documents</p>
+                        <p className="text-2xl font-bold text-blue-600">{allPatientData.statistics?.totalDocuments || 0}</p>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Total Vitals</p>
+                        <p className="text-2xl font-bold text-green-600">{allPatientData.statistics?.totalVitals || 0}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Mental Health Logs</p>
+                        <p className="text-2xl font-bold text-purple-600">{allPatientData.statistics?.totalMentalHealthLogs || 0}</p>
+                      </div>
+                      <div className="bg-orange-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Prescriptions</p>
+                        <p className="text-2xl font-bold text-orange-600">{allPatientData.statistics?.totalPrescriptions || 0}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Recent Documents */}
+                  {allPatientData.documents && allPatientData.documents.length > 0 && (
+                    <section>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Documents</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {allPatientData.documents.slice(0, 5).map((doc: any) => (
+                          <div key={doc._id} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{doc.file_name}</p>
+                              <p className="text-xs text-gray-600">{doc.document_type}</p>
+                            </div>
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-emerald-600 text-sm font-medium hover:text-emerald-700"
+                            >
+                              View
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Recent Vitals */}
+                  {allPatientData.vitals && allPatientData.vitals.length > 0 && (
+                    <section>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Vitals</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {allPatientData.vitals.slice(0, 3).map((vital: any, idx: number) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                              <div><span className="font-medium">BP:</span> {vital.systolic_bp}/{vital.diastolic_bp}</div>
+                              <div><span className="font-medium">HR:</span> {vital.heart_rate} bpm</div>
+                              <div><span className="font-medium">Temp:</span> {vital.temperature}°F</div>
+                              <div><span className="font-medium">O2:</span> {vital.spo2}%</div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">{new Date(vital.recorded_at).toLocaleString()}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Recent Mental Health Logs */}
+                  {allPatientData.mentalHealthLogs && allPatientData.mentalHealthLogs.length > 0 && (
+                    <section>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Mental Health History</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {allPatientData.mentalHealthLogs.slice(0, 5).map((log: any, idx: number) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-medium text-gray-900">Mood: {log.mood_level}</p>
+                              <p className="text-xs text-gray-600">{new Date(log.recorded_date).toLocaleDateString()}</p>
+                            </div>
+                            {log.notes && <p className="text-sm text-gray-700">{log.notes}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Recent Prescriptions */}
+                  {allPatientData.prescriptions && allPatientData.prescriptions.length > 0 && (
+                    <section>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Prescriptions</h3>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {allPatientData.prescriptions.slice(0, 5).map((rx: any, idx: number) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-sm font-medium text-gray-900">{rx.medication_name}</p>
+                            <p className="text-xs text-gray-600">{rx.dosage} - {rx.frequency}</p>
+                            <p className="text-xs text-gray-500 mt-1">Prescribed: {new Date(rx.prescribed_at).toLocaleDateString()}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* No data message */}
+                  {(!allPatientData.documents || allPatientData.documents.length === 0) &&
+                    (!allPatientData.vitals || allPatientData.vitals.length === 0) &&
+                    (!allPatientData.mentalHealthLogs || allPatientData.mentalHealthLogs.length === 0) &&
+                    (!allPatientData.prescriptions || allPatientData.prescriptions.length === 0) && (
+                      <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                        <p>No patient records found for this patient</p>
+                      </div>
+                    )}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-600">
+                  <p>No patient data available</p>
+                  <p className="text-sm text-gray-500 mt-2">allPatientData is: {JSON.stringify(allPatientData)}</p>
+                </div>
+              )}
+
+              <div className="mt-6">
+                <button
+                  onClick={handleCloseAllDataModal}
                   className="w-full rounded-md border border-gray-300 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
                 >
                   Close

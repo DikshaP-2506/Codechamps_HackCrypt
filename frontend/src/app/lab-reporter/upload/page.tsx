@@ -62,11 +62,7 @@ function Sidebar({ active, userData }: { active: string; userData: any }) {
           <div className="flex-1">
             <p className="font-semibold text-white">{userData?.name || "Loading..."}</p>
             <p className="text-xs text-teal-200">{userData?.role === 'lab_reporter' ? 'Lab Reporter' : 'Lab Technician'}</p>
-            {userData?.id && (
-              <span className="mt-1 inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-semibold text-white">
-                ID #{userData.id.slice(-6).toUpperCase()}
-              </span>
-            )}
+            
           </div>
         </div>
       </div>

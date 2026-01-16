@@ -1,20 +1,43 @@
 const PatientProfile = require('../models/PatientProfile');
+const mongoose = require('mongoose');
 
-// @desc    Get all patient profiles
-// @route   GET /api/patients
-// @access  Public (should be protected with auth in production)
-exports.getAllPatients = async (req, res, next) => {
+// @desc    Get all users with role='patient'
+// @route   GET /api/patients/users/all
+// @access  Public
+exports.getPatientUsers = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, search, sortBy = 'created_at', order = 'desc', is_active } = req.query;
+    const { search } = req.query;
 
-    const query = {};
+    const usersCollection = mongoose.connection.collection('users');
+    const query = { role: 'patient' };
 
-    // Filter by active status
-    if (is_active !== undefined) {
-      query.is_active = is_active === 'true';
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    // Search functionality
+    const users = await usersCollection.find(query).toArray();
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all patient profiles from patients collection
+// @route   GET /api/patients/profiles/all
+// @access  Public
+exports.getPatientProfiles = async (req, res, next) => {
+  try {
+    const { search } = req.query;
+
+    const query = {};
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -22,22 +45,11 @@ exports.getAllPatients = async (req, res, next) => {
       ];
     }
 
-    const patients = await PatientProfile.find(query)
-      .populate('user_id', 'name email')
-      .populate('primary_doctor_id', 'name specialization')
-      .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .select('-__v');
-
-    const count = await PatientProfile.countDocuments(query);
+    const patients = await PatientProfile.find(query).select('-__v').lean();
 
     res.status(200).json({
       success: true,
       count: patients.length,
-      totalPages: Math.ceil(count / limit),
-      currentPage: parseInt(page),
-      totalPatients: count,
       data: patients
     });
   } catch (error) {

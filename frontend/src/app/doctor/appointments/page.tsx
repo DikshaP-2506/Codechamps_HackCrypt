@@ -405,7 +405,39 @@ function AppointmentCard({
   height: number;
   onSelect: (a: Appointment) => void;
 }) {
-  const statusClass = statusColors[appt.status];
+  const statusBorderColor =
+    appt.status === "confirmed"
+      ? "border-emerald-500"
+      : appt.status === "scheduled"
+      ? "border-blue-500"
+      : appt.status === "completed"
+      ? "border-gray-400"
+      : appt.status === "cancelled"
+      ? "border-red-500"
+      : "border-yellow-500";
+
+  const statusBgColor =
+    appt.status === "confirmed"
+      ? "bg-emerald-50 hover:bg-emerald-100"
+      : appt.status === "scheduled"
+      ? "bg-blue-50 hover:bg-blue-100"
+      : appt.status === "completed"
+      ? "bg-gray-50 hover:bg-gray-100"
+      : appt.status === "cancelled"
+      ? "bg-red-50 hover:bg-red-100"
+      : "bg-yellow-50 hover:bg-yellow-100";
+
+  const statusDot =
+    appt.status === "confirmed"
+      ? "bg-emerald-500"
+      : appt.status === "scheduled"
+      ? "bg-blue-500"
+      : appt.status === "completed"
+      ? "bg-gray-400"
+      : appt.status === "cancelled"
+      ? "bg-red-500"
+      : "bg-yellow-500";
+
   const isVirtual = appt.location.mode === "virtual";
   const badgeClass =
     appt.type === "Consultation"
@@ -416,43 +448,68 @@ function AppointmentCard({
       ? "bg-purple-100 text-purple-700"
       : "bg-teal-100 text-teal-700";
 
+  const typeIcon =
+    appt.type === "Consultation"
+      ? "🩺"
+      : appt.type === "Follow-up"
+      ? "🔄"
+      : appt.type === "Therapy"
+      ? "🧠"
+      : "✅";
+
   return (
     <button
       onClick={() => onSelect(appt)}
-      className={`absolute left-1 right-1 rounded-lg border-l-4 p-3 text-left shadow-sm transition hover:shadow-md cursor-pointer ${statusClass}`}
+      className={`absolute left-0.5 right-0.5 rounded-lg border-2 ${statusBorderColor} p-2 text-left shadow-md transition hover:shadow-lg hover:scale-105 hover:z-10 cursor-pointer ${statusBgColor} overflow-hidden`}
       style={{ top, height }}
       title={`${appt.patientName} • ${formatTimeRange(appt.start, appt.end)}`}
     >
-      <div className="flex items-center justify-between text-xs font-semibold text-gray-900">
-        <span>{formatTimeRange(appt.start, appt.end)}</span>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusBadge[appt.status]}`}>
-          {appt.status === "confirmed"
-            ? "Confirmed"
-            : appt.status === "scheduled"
-            ? "Scheduled"
-            : appt.status === "completed"
-            ? "Completed"
-            : appt.status === "cancelled"
-            ? "Cancelled"
-            : "No-show"}
+      {/* Status dot - positioned top right */}
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+        <span className={`h-2 w-2 rounded-full ${statusDot} shadow-sm`} />
+      </div>
+
+      {/* Time - Bold and compact */}
+      <div className="mb-1 pr-6">
+        <span className="text-xs font-bold text-gray-900 leading-tight">
+          {formatTimeRange(appt.start, appt.end)}
         </span>
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        <Avatar name={appt.patientName} size={24} />
-        <div className="leading-tight">
-          <p className="text-sm font-semibold text-gray-900">{appt.patientName}</p>
-          <p className="text-[11px] text-gray-600">#{appt.patientId}</p>
+      {/* Patient info - Compact with initials */}
+      <div className="mb-1 flex items-center gap-1.5 min-w-0">
+        <div className="h-5 w-5 flex-shrink-0 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 text-[8px] font-bold leading-5 text-white flex items-center justify-center">
+          {appt.patientName
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .slice(0, 2)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[11px] font-bold text-gray-900">{appt.patientName}</p>
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-between">
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badgeClass}`}>
-          {appt.type}
+      {/* Type badge and location - More compact */}
+      <div className="flex items-center justify-between gap-0.5 text-[9px]">
+        <span
+          className={`inline-flex items-center gap-0.5 rounded-full px-1 py-0.5 whitespace-nowrap font-semibold ${badgeClass}`}
+        >
+          <span>{typeIcon}</span>
+          <span className="max-w-[60px] truncate">{appt.type}</span>
         </span>
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          {isVirtual ? <VideoIcon className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-          <span>{isVirtual ? "Virtual" : "In-clinic"}</span>
+        <div className="flex items-center gap-0.5 text-gray-600 whitespace-nowrap">
+          {isVirtual ? (
+            <>
+              <VideoIcon className="h-2.5 w-2.5" />
+              <span className="hidden sm:inline">V</span>
+            </>
+          ) : (
+            <>
+              <MapPin className="h-2.5 w-2.5" />
+              <span className="hidden sm:inline">C</span>
+            </>
+          )}
         </div>
       </div>
     </button>
@@ -501,7 +558,7 @@ function RightSidebar() {
 
   return (
     <aside className="w-full max-w-sm space-y-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Today's Overview - Jan 16</h3>
@@ -520,6 +577,7 @@ function RightSidebar() {
                 strokeDashoffset={offset}
                 strokeLinecap="round"
                 fill="none"
+                className="transition-all"
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center text-center">
@@ -532,41 +590,41 @@ function RightSidebar() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-lg bg-emerald-50 px-3 py-2">
-            <p className="text-gray-600">Total Appointments</p>
-            <p className="text-lg font-bold text-gray-900">8</p>
+          <div className="rounded-xl bg-emerald-50 px-3 py-3 border border-emerald-100">
+            <p className="text-gray-600 text-xs font-semibold">Total Appointments</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">8</p>
           </div>
-          <div className="rounded-lg bg-blue-50 px-3 py-2">
-            <p className="text-gray-600">Upcoming</p>
-            <p className="text-lg font-bold text-blue-700">5</p>
+          <div className="rounded-xl bg-blue-50 px-3 py-3 border border-blue-100">
+            <p className="text-gray-600 text-xs font-semibold">Upcoming</p>
+            <p className="text-lg font-bold text-blue-700 mt-1">5</p>
           </div>
-          <div className="rounded-lg bg-gray-100 px-3 py-2">
-            <p className="text-gray-600">Completed</p>
-            <p className="text-lg font-bold text-gray-800">3</p>
+          <div className="rounded-xl bg-gray-100 px-3 py-3 border border-gray-200">
+            <p className="text-gray-600 text-xs font-semibold">Completed</p>
+            <p className="text-lg font-bold text-gray-800 mt-1">3</p>
           </div>
-          <div className="rounded-lg bg-red-50 px-3 py-2">
-            <p className="text-gray-600">No-shows</p>
-            <p className="text-lg font-bold text-red-700">0</p>
+          <div className="rounded-xl bg-red-50 px-3 py-3 border border-red-100">
+            <p className="text-gray-600 text-xs font-semibold">No-shows</p>
+            <p className="text-lg font-bold text-red-700 mt-1">0</p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-900">Next 7 Days</h3>
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-700">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-50">
             Next 7 days
             <ChevronDown className="h-4 w-4" />
           </div>
         </div>
 
-        <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
           {upcoming.map((item, idx) => (
             <div
               key={idx}
-              className="group flex items-center gap-3 rounded-lg border border-gray-100 p-3 transition hover:border-emerald-200 hover:shadow-sm"
+              className="group flex items-center gap-3 rounded-xl border-2 border-gray-200 p-3 transition hover:border-emerald-400 hover:shadow-md hover:bg-emerald-50/30"
             >
-              <div className="flex flex-col items-center justify-center rounded-lg bg-emerald-50 px-3 py-2 text-center">
+              <div className="flex flex-col items-center justify-center rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 px-3 py-2 text-center border border-emerald-200">
                 <div className="text-xs font-bold text-emerald-700">{item.date}</div>
                 <div className="text-xl font-bold text-gray-900">{item.dayNum}</div>
                 <div className="text-xs text-gray-600">{item.month}</div>
@@ -580,7 +638,7 @@ function RightSidebar() {
                       <p className="text-xs text-gray-600">{item.type}</p>
                     </div>
                   </div>
-                  <div className="text-sm font-medium text-gray-800">{item.time}</div>
+                  <div className="text-sm font-bold text-gray-800">{item.time}</div>
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
                   {item.virtual ? <VideoIcon className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
@@ -608,24 +666,24 @@ function RightSidebar() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Quick Stats</h3>
+      <div className="rounded-2xl border-2 border-gray-300 bg-white p-6 shadow-lg">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
         <div className="space-y-3 text-sm">
-          <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2">
-            <span className="text-gray-700">This Week</span>
-            <span className="font-semibold text-gray-900">42 appointments</span>
+          <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 border border-emerald-200">
+            <span className="text-gray-700 font-semibold">This Week</span>
+            <span className="font-bold text-emerald-700 text-base">42</span>
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2">
-            <span className="text-gray-700">Utilization rate</span>
-            <span className="font-semibold text-blue-700">85%</span>
+          <div className="flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3 border border-blue-200">
+            <span className="text-gray-700 font-semibold">Utilization rate</span>
+            <span className="font-bold text-blue-700 text-base">85%</span>
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2">
-            <span className="text-gray-700">Avg duration</span>
-            <span className="font-semibold text-gray-900">35 mins</span>
+          <div className="flex items-center justify-between rounded-xl bg-gray-100 px-4 py-3 border border-gray-300">
+            <span className="text-gray-700 font-semibold">Avg duration</span>
+            <span className="font-bold text-gray-900 text-base">35 m</span>
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-purple-50 px-3 py-2">
-            <span className="text-gray-700">Most common type</span>
-            <span className="font-semibold text-purple-700">Follow-ups (45%)</span>
+          <div className="flex items-center justify-between rounded-xl bg-purple-50 px-4 py-3 border border-purple-200">
+            <span className="text-gray-700 font-semibold">Most common</span>
+            <span className="font-bold text-purple-700 text-base">45%</span>
           </div>
         </div>
       </div>
@@ -963,7 +1021,7 @@ export default function AppointmentsPage() {
 
   const startHour = 9;
   const endHour = 18;
-  const rowHeight = 32; // each 30 minutes
+  const rowHeight = 64; // 64px per 30 minutes for better visibility
   const totalRows = (endHour - startHour) * 2;
 
   const grouped = useMemo(() => {
@@ -994,20 +1052,22 @@ export default function AppointmentsPage() {
         <div className="mx-auto max-w-7xl px-4 py-6">
           {/* Requested Appointments Section */}
           {requests.length > 0 && (
-            <div className="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
+            <div className="mb-6 rounded-2xl border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100/50 p-6 shadow-lg">
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-200 text-sm font-bold text-yellow-700">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-300 text-sm font-bold text-yellow-900 shadow-md">
                     {requests.length}
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900">Requested Appointments</h2>
-                  <p className="text-sm text-gray-600">Patients awaiting approval</p>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Requested Appointments</h2>
+                    <p className="text-sm text-gray-600">Patients awaiting your approval</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowRequests(!showRequests)}
-                  className="text-sm font-semibold text-yellow-700 hover:text-yellow-800"
+                  className="flex items-center gap-2 rounded-lg bg-yellow-200 px-4 py-2 text-sm font-bold text-yellow-900 transition hover:bg-yellow-300 hover:shadow-md"
                 >
-                  {showRequests ? "Hide" : "Show"} Requests
+                  {showRequests ? "▼ Hide" : "▶ Show"} Requests
                 </button>
               </div>
 
@@ -1016,57 +1076,57 @@ export default function AppointmentsPage() {
                   {requests.map((req) => (
                     <div
                       key={req.id}
-                      className="rounded-lg border border-yellow-300 bg-white p-4 shadow-sm"
+                      className="rounded-xl border-2 border-yellow-200 bg-white p-4 shadow-md hover:shadow-lg transition"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3 mb-3">
                             <Avatar name={req.patientName} size={40} />
                             <div>
-                              <p className="font-semibold text-gray-900">{req.patientName}</p>
+                              <p className="font-bold text-gray-900">{req.patientName}</p>
                               <p className="text-sm text-gray-600">{req.patientId}</p>
                             </div>
                           </div>
 
-                          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-                            <div>
-                              <p className="text-xs text-gray-500">Preferred Date</p>
-                              <p className="text-sm font-semibold text-gray-900">
+                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-3">
+                            <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Preferred Date</p>
+                              <p className="text-sm font-bold text-gray-900 mt-1">
                                 {new Date(req.preferredDate).toLocaleDateString()}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Preferred Time</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.preferredTime}</p>
+                            <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Preferred Time</p>
+                              <p className="text-sm font-bold text-gray-900 mt-1">{req.preferredTime}</p>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Type</p>
-                              <p className="text-sm font-semibold text-gray-900">{req.type}</p>
+                            <div className="rounded-lg bg-blue-50 px-3 py-2 border border-blue-200">
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Type</p>
+                              <p className="text-sm font-bold text-blue-700 mt-1">{req.type}</p>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Location</p>
-                              <p className="text-sm font-semibold text-gray-900">
+                            <div className="rounded-lg bg-emerald-50 px-3 py-2 border border-emerald-200">
+                              <p className="text-xs font-semibold text-gray-600 uppercase">Location</p>
+                              <p className="text-sm font-bold text-emerald-700 mt-1">
                                 {req.location === "clinic" ? "🏥 In-clinic" : "💻 Virtual"}
                               </p>
                             </div>
                           </div>
 
-                          <div className="mt-2">
-                            <p className="text-xs text-gray-500">Reason</p>
-                            <p className="text-sm text-gray-700">{req.reason}</p>
+                          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
+                            <p className="text-xs font-semibold text-gray-600 uppercase">Reason</p>
+                            <p className="text-sm text-gray-700 mt-1 font-medium">{req.reason}</p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 flex-shrink-0">
                           <button
                             onClick={() => handleApproveRequest(req)}
-                            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 hover:shadow-lg"
                           >
                             ✓ Approve
                           </button>
                           <button
                             onClick={() => handleRejectRequest(req.id)}
-                            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            className="rounded-lg border-2 border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50 hover:border-red-400"
                           >
                             ✕ Reject
                           </button>
@@ -1081,88 +1141,115 @@ export default function AppointmentsPage() {
 
           {/* Calendar Section */}
           <div className="flex gap-6">
-            <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700">
-              <div className="w-20" />
-              <div className="flex-1 grid grid-cols-6 gap-2">
-                {dayOrder.map((d) => (
-                  <div
-                    key={d.key}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold ${
-                      d.key === "thu" ? "bg-emerald-50 text-emerald-700" : "text-gray-800"
-                    }`}
-                  >
-                    <span>{d.label}</span>
-                    {d.key === "thu" && (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                        Today
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="flex">
-                {/* Time column */}
-                <div className="w-20 border-r border-gray-200 bg-white">
-                  {Array.from({ length: endHour - startHour + 1 }).map((_, idx) => {
-                    const hour = startHour + idx;
-                    const label = `${((hour + 11) % 12) + 1}:00 ${hour >= 12 ? "PM" : "AM"}`;
+            <div className="flex-1 overflow-hidden rounded-2xl border-2 border-gray-300 bg-white shadow-xl">
+              <div className="flex border-b-2 border-gray-300 bg-gradient-to-r from-gray-50 via-gray-50 to-gray-100 px-4 py-4 text-sm font-bold text-gray-900">
+                <div className="w-20 flex-shrink-0" />
+                <div className="flex-1 grid grid-cols-6 gap-1">
+                  {dayOrder.map((d) => {
+                    const isTodayCol = d.key === "thu";
                     return (
                       <div
-                        key={hour}
-                        className="relative h-[64px] border-b border-gray-100 text-right pr-3 text-xs font-semibold text-gray-500"
+                        key={d.key}
+                        className={`flex flex-col items-center justify-between rounded-xl px-3 py-3 text-sm font-bold transition-all ${
+                          isTodayCol
+                            ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg border-2 border-emerald-500"
+                            : "bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                        }`}
                       >
-                        <span className="absolute -top-2 right-3">{label}</span>
-                        <div className="absolute left-0 right-0 top-1/2 h-px bg-gray-100" />
+                        <span className="font-bold">{d.label}</span>
+                        {isTodayCol && (
+                          <span className="mt-1 text-[9px] font-bold tracking-widest uppercase bg-white/20 px-2 py-0.5 rounded-full">
+                            Today
+                          </span>
+                        )}
                       </div>
                     );
                   })}
                 </div>
+              </div>
+
+              <div className="relative">
+                <div className="flex">
+                  {/* Time column */}
+                  <div className="w-20 flex-shrink-0 border-r-2 border-gray-300 bg-gradient-to-b from-gray-50 to-white">
+                    {Array.from({ length: endHour - startHour + 1 }).map((_, idx) => {
+                      const hour = startHour + idx;
+                      const label = `${((hour + 11) % 12) + 1}:00 ${hour >= 12 ? "PM" : "AM"}`;
+                      return (
+                        <div
+                          key={hour}
+                          className="relative h-16 border-b border-gray-200 pr-2 text-right flex flex-col justify-between py-1"
+                        >
+                          <span className="text-[10px] font-bold text-gray-700 leading-tight">{label}</span>
+                          <div className="text-[8px] text-gray-400 font-semibold leading-tight">{(idx + startHour) % 12 === 0 ? 12 : (idx + startHour) % 12}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
                 {/* Day columns */}
-                <div className="flex-1 grid grid-cols-6">
-                  {dayOrder.map((day) => (
-                    <div key={day.key} className="relative border-r border-gray-100 last:border-r-0">
-                      {/* Hour lines */}
-                      {Array.from({ length: endHour - startHour + 1 }).map((_, idx) => (
-                        <div
-                          key={idx}
-                          className="relative h-[64px] border-b border-gray-100"
-                          onClick={() => handleSlotClick(day.key, startHour + idx, 0)}
-                        >
+                <div className="flex-1 grid grid-cols-6 bg-gray-50">
+                  {dayOrder.map((day) => {
+                    const isTodayCol = day.key === "thu";
+                    return (
+                      <div 
+                        key={day.key} 
+                        className={`relative border-r transition-colors ${
+                          isTodayCol 
+                            ? "border-emerald-200 bg-emerald-50/30" 
+                            : "border-gray-200 bg-white hover:bg-gray-50"
+                        } last:border-r-0`}
+                      >
+                        {/* Hour lines */}
+                        {Array.from({ length: endHour - startHour + 1 }).map((_, idx) => (
                           <div
-                            className="absolute left-0 right-0 top-1/2 h-px bg-gray-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSlotClick(day.key, startHour + idx, 1);
-                            }}
-                          />
-                        </div>
-                      ))}
+                            key={idx}
+                            className={`relative h-16 cursor-pointer transition hover:bg-gray-100/50 ${
+                              isTodayCol ? "hover:bg-emerald-100/50" : ""
+                            }`}
+                            onClick={() => handleSlotClick(day.key, startHour + idx, 0)}
+                          >
+                            {/* Half hour line - darker */}
+                            <div
+                              className={`absolute left-0 right-0 top-1/2 h-px transition ${
+                                isTodayCol ? "bg-emerald-200" : "bg-gray-200"
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSlotClick(day.key, startHour + idx, 1);
+                              }}
+                            />
+                            
+                            {/* Full hour line at bottom */}
+                            <div
+                              className={`absolute left-0 right-0 bottom-0 h-px transition ${
+                                isTodayCol ? "bg-emerald-300" : "bg-gray-300"
+                              }`}
+                            />
+                          </div>
+                        ))}
 
-                      {/* Appointments */}
-                      {(grouped[day.key] || []).map((appt) => {
-                        const startMins = timeToMinutes(appt.start);
-                        const endMins = timeToMinutes(appt.end);
-                        const offset = startMins - startHour * 60;
-                        const duration = endMins - startMins;
-                        const top = (offset / 30) * rowHeight;
-                        const height = (duration / 30) * rowHeight;
-                        return (
-                          <AppointmentCard
-                            key={appt.id}
-                            appt={appt}
-                            top={top}
-                            height={height}
-                            onSelect={setSelected}
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
+                        {/* Appointments */}
+                        {(grouped[day.key] || []).map((appt) => {
+                          const startMins = timeToMinutes(appt.start);
+                          const endMins = timeToMinutes(appt.end);
+                          const offset = startMins - startHour * 60;
+                          const duration = endMins - startMins;
+                          const top = (offset / 30) * rowHeight;
+                          const height = (duration / 30) * rowHeight;
+                          return (
+                            <AppointmentCard
+                              key={appt.id}
+                              appt={appt}
+                              top={top}
+                              height={height}
+                              onSelect={setSelected}
+                            />
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

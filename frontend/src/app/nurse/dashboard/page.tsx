@@ -73,12 +73,12 @@ function Sidebar() {
 
   const navItems = [
     { label: "Dashboard", icon: Home, active: true, href: "/nurse/dashboard" },
+    { label: "Patient Data", icon: Activity, active: false, href: "/nurse/patient-data" },
     { label: "Assigned Patients", icon: Users, href: "/nurse/patients" },
     { label: "Tasks", icon: Clipboard, href: "/nurse/tasks" },
-    { label: "Vitals Monitoring", icon: Activity, href: "/nurse/vitals" },
+    { label: "Vitals Monitoring", icon: Heart, href: "/nurse/vitals" },
     { label: "Medications", icon: Syringe, href: "/nurse/medications" },
     { label: "Appointments", icon: Calendar, href: "/nurse/appointments" },
-    { label: "Reports", icon: Heart, href: "/nurse/reports" },
     { label: "Settings", icon: Settings, href: "/nurse/settings" },
   ];
 

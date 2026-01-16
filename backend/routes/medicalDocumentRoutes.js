@@ -17,7 +17,6 @@ const {
   getDocumentStats,
   logDownload
 } = require('../controllers/medicalDocumentController');
-const { validateMedicalDocument } = require('../middleware/validators');
 
 // Statistics route (must be before /:id)
 router.get('/stats/overview', getDocumentStats);
@@ -28,11 +27,11 @@ router.post('/upload', upload.single('file'), createDocument);
 // Main routes
 router.route('/')
   .get(getAllDocuments)
-  .post(validateMedicalDocument, createDocument);
+  .post(createDocument);
 
 router.route('/:id')
   .get(getDocumentById)
-  .put(validateMedicalDocument, updateDocument)
+  .put(updateDocument)
   .delete(deleteDocument);
 
 // Patient-specific routes

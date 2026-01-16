@@ -1,0 +1,80 @@
+###############################################
+### MEDICAL DOCUMENTS (CLOUDINARY) APIS
+###############################################
+
+### 1. Upload Medical Document (Multipart Form - use Postman)
+# Note: This requires file upload - test in Postman
+POST http://localhost:5001/api/medical-documents/upload
+Content-Type: multipart/form-data
+
+# In Postman:
+# - Select POST request
+# - Go to Body -> form-data
+# - Add key: file (type: File) -> select your PDF/image
+# - Add key: patient_id (type: Text) -> value: 9897
+# - Add key: uploaded_by (type: Text) -> value: 9097
+# - Add key: document_type (type: Text) -> value: Lab Report
+# - Add key: category (type: Text) -> value: lab_results
+# - Add key: description (type: Text) -> value: Blood test results
+
+### 2. Get All Medical Documents
+GET http://localhost:5001/api/medical-documents?limit=20
+
+### 3. Get Documents by Patient ID
+GET http://localhost:5001/api/medical-documents/patient/9897
+
+### 4. Get Documents by Patient with Filters
+GET http://localhost:5001/api/medical-documents/patient/9897?document_type=Lab Report&category=lab_results
+
+### 5. Get Documents by Uploader (Lab Reporter)
+GET http://localhost:5001/api/medical-documents/uploaded-by/9097
+
+### 6. Get Single Document by ID (replace with actual document ID)
+GET http://localhost:5001/api/medical-documents/65f00000000000000000901
+
+### 7. Get Document Statistics
+GET http://localhost:5001/api/medical-documents/stats/overview
+
+### 8. Update Document Metadata (replace with actual document ID)
+PUT http://localhost:5001/api/medical-documents/65f00000000000000000901
+Content-Type: application/json
+
+{
+  "description": "Updated: Blood test results showing improvement",
+  "document_type": "Blood Test",
+  "category": "lab_results"
+}
+
+### 9. Delete Document (replace with actual document ID)
+DELETE http://localhost:5001/api/medical-documents/65f00000000000000000901
+
+### 10. Share Document with Doctor (replace with actual document ID)
+POST http://localhost:5001/api/medical-documents/65f00000000000000000901/share
+Content-Type: application/json
+
+{
+  "user_id": "doctor_123",
+  "permission": "view"
+}
+
+### 11. Get Document Access Logs (replace with actual document ID)
+GET http://localhost:5001/api/medical-documents/65f00000000000000000901/access-logs
+
+###############################################
+### DOCUMENT UPLOAD TEST SCENARIOS
+###############################################
+
+### Scenario 1: Get All Documents for Patient (Doctor View)
+GET http://localhost:5001/api/medical-documents/patient/9897?limit=50
+
+### Scenario 2: Filter Patient Documents by Type
+GET http://localhost:5001/api/medical-documents/patient/9897?document_type=Blood Test
+
+### Scenario 3: Search Documents
+GET http://localhost:5001/api/medical-documents?search=blood&patient_id=9897
+
+### Scenario 4: Filter by Category
+GET http://localhost:5001/api/medical-documents?category=lab_results&limit=20
+
+### Scenario 5: Get Recent Uploads
+GET http://localhost:5001/api/medical-documents?sort_by=uploaded_at&sort_order=desc&limit=10

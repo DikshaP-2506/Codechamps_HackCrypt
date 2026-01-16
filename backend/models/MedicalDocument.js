@@ -54,24 +54,6 @@ const medicalDocumentSchema = new mongoose.Schema({
   document_type: {
     type: String,
     required: true,
-    enum: [
-      'lab_report',
-      'x_ray',
-      'mri_scan',
-      'ct_scan',
-      'ultrasound',
-      'ecg',
-      'therapy_note',
-      'prescription',
-      'discharge_summary',
-      'symptom_photo',
-      'wound_progress',
-      'medical_certificate',
-      'vaccination_record',
-      'insurance_document',
-      'consent_form',
-      'other'
-    ],
     index: true
   },
 
@@ -266,7 +248,7 @@ medicalDocumentSchema.methods.revokeSharing = function(userId) {
 };
 
 // Static method for auto-categorization
-medicalDocumentSchema.statics.autoCategorizeDOcument = function(documentType) {
+medicalDocumentSchema.statics.autoCategorizeDocument = function(documentType) {
   const categoryMap = {
     'x_ray': 'radiology',
     'mri_scan': 'radiology',

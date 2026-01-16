@@ -123,7 +123,7 @@ exports.getPrescriptionById = async (req, res, next) => {
     const prescription = await Prescription.findById(req.params.id)
       .populate('patient_id', 'name date_of_birth gender blood_group emergency_contact_phone')
       .populate('doctor_id', 'name specialization contact_number')
-      .select('-__v');
+      .select('-__v').catch(() => null);
 
     if (!prescription) {
       return res.status(404).json({

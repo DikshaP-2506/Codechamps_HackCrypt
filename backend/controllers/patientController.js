@@ -50,7 +50,13 @@ exports.getAllPatients = async (req, res, next) => {
 // @access  Public
 exports.getPatientById = async (req, res, next) => {
   try {
-    const patient = await PatientProfile.findById(req.params.id).select('-__v');
+    // Try to find by MongoDB _id first, then by clerk_user_id
+    let patient = await PatientProfile.findById(req.params.id).select('-__v').catch(() => null);
+    
+    if (!patient) {
+      // If not found by _id, try clerk_user_id
+      patient = await PatientProfile.findOne({ clerk_user_id: req.params.id }).select('-__v');
+    }
 
     if (!patient) {
       return res.status(404).json({
@@ -325,6 +331,125 @@ exports.updateFamilyHistory = async (req, res, next) => {
       data: patient,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get patients by doctor ID
+// @route   GET /api/patients/doctor/:doctorId
+// @access  Doctor
+exports.getPatientsByDoctor = async (req, res, next) => {
+  try {
+    const { doctorId } = req.params;
+    const { limit = 100 } = req.query;
+
+    const patients = await PatientProfile.find({
+      primary_doctor_id: doctorId,
+      is_active: true
+    })
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .select('-__v');
+
+    res.status(200).json({
+      success: true,
+      count: patients.length,
+      data: patients
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get comprehensive patient data (vitals, mental health, documents, prescriptions)
+// @route   GET /api/patients/:patientId/comprehensive
+// @access  Doctor
+exports.getComprehensivePatientData = async (req, res, next) => {
+  try {
+    const { patientId } = req.params;
+    const PatientProfile = require('../models/PatientProfile');
+    const PhysicalVitals = require('../models/PhysicalVitals');
+    const MentalHealthLog = require('../models/MentalHealthLog');
+    const MedicalDocument = require('../models/MedicalDocument');
+    const Prescription = require('../models/Prescription');
+
+    // Get patient profile
+    const patient = await PatientProfile.findOne({
+      $or: [
+        { _id: patientId },
+        { clerk_user_id: patientId }
+      ]
+    }).select('-__v');
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    const patientIdentifier = patient.clerk_user_id || patient._id.toString();
+
+    // Get recent vitals (last 10)
+    const vitals = await PhysicalVitals.find({
+      patient_id: patientIdentifier
+    })
+      .sort({ recorded_at: -1 })
+      .limit(10)
+      .select('-__v');
+
+    // Get mental health logs (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const mentalHealthLogs = await MentalHealthLog.find({
+      patient_id: patientIdentifier,
+      recorded_date: { $gte: thirtyDaysAgo }
+    })
+      .sort({ recorded_date: -1 })
+      .select('-__v');
+
+    // Get medical documents
+    const documents = await MedicalDocument.find({
+      patient_id: patientIdentifier,
+      is_deleted: false,
+      is_active: true
+    })
+      .sort({ uploaded_at: -1 })
+      .limit(20)
+      .select('-access_logs -__v');
+
+    // Get prescriptions
+    const prescriptions = await Prescription.find({
+      patient_id: patientIdentifier
+    })
+      .sort({ prescribed_at: -1 })
+      .limit(10)
+      .select('-__v');
+
+    // Calculate statistics
+    const stats = {
+      totalVitals: vitals.length,
+      totalMentalHealthLogs: mentalHealthLogs.length,
+      totalDocuments: documents.length,
+      totalPrescriptions: prescriptions.length,
+      latestVitals: vitals[0] || null,
+      latestMentalHealth: mentalHealthLogs[0] || null
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        patient,
+        vitals,
+        mentalHealthLogs,
+        documents,
+        prescriptions,
+        statistics: stats
+      }
+    });
+  } catch (error) {
+    console.error('Get comprehensive patient data error:', error);
     next(error);
   }
 };

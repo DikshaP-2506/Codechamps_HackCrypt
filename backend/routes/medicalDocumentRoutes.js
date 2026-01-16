@@ -15,11 +15,13 @@ const {
   createNewVersion,
   getVersionHistory,
   getDocumentStats,
-  logDownload
+  logDownload,
+  getLabReporterStats
 } = require('../controllers/medicalDocumentController');
 
-// Statistics route (must be before /:id)
+// Statistics routes (must be before /:id)
 router.get('/stats/overview', getDocumentStats);
+router.get('/stats/lab-reporter', getLabReporterStats);
 
 // File upload route (with multer middleware)
 router.post('/upload', upload.single('file'), createDocument);

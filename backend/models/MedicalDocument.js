@@ -91,6 +91,55 @@ const medicalDocumentSchema = new mongoose.Schema({
     default: []
   },
 
+  // Report Details (for lab reports, radiology, etc.)
+  report_details: {
+    test_date: {
+      type: Date,
+      default: null
+    },
+    laboratory: {
+      type: String,
+      maxlength: 200
+    },
+    test_category: {
+      type: String,
+      maxlength: 100
+    },
+    priority: {
+      type: String,
+      enum: ['normal', 'urgent', 'emergency'],
+      default: 'normal'
+    },
+    ordering_doctor: {
+      type: String,
+      maxlength: 200
+    },
+    report_notes: {
+      type: String,
+      maxlength: 1000
+    }
+  },
+
+  // Notification Settings
+  notifications: {
+    notify_patient: {
+      type: Boolean,
+      default: true
+    },
+    notify_doctor: {
+      type: Boolean,
+      default: true
+    },
+    patient_notified_at: {
+      type: Date,
+      default: null
+    },
+    doctor_notified_at: {
+      type: Date,
+      default: null
+    }
+  },
+
   // Version control
   version: {
     type: Number,

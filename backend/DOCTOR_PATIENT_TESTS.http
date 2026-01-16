@@ -1,0 +1,45 @@
+### Doctor's Patient Management APIs
+
+### 1. Get Patients Assigned to Doctor
+GET http://localhost:5001/api/patients/doctor/doctor_123
+
+### 2. Get Comprehensive Patient Data (All vitals, mental health, documents, prescriptions)
+GET http://localhost:5001/api/patients/user_38LluGY5no86BOCJWUyhC5i8p6P/comprehensive
+
+### 3. Assign Patient to Doctor (Update patient's primary_doctor_id)
+PUT http://localhost:5001/api/patients/678d8a43f6e87c16e86ab1a8
+Content-Type: application/json
+
+{
+  "primary_doctor_id": "doctor_123"
+}
+
+### 4. Get All Patients (for assignment)
+GET http://localhost:5001/api/patients?limit=50
+
+### Test Scenarios
+
+### Scenario 1: Doctor views their assigned patients
+GET http://localhost:5001/api/patients/doctor/doctor_123
+
+### Scenario 2: Doctor selects a patient and views complete health data
+GET http://localhost:5001/api/patients/user_38LluGY5no86BOCJWUyhC5i8p6P/comprehensive
+
+### Scenario 3: Assign multiple patients to a doctor
+# Update Patient 1
+PUT http://localhost:5001/api/patients/678d8a43f6e87c16e86ab1a8
+Content-Type: application/json
+
+{
+  "primary_doctor_id": "doctor_123"
+}
+
+###
+
+# Update Patient 2
+PUT http://localhost:5001/api/patients/678d8a43f6e87c16e86ab1b9
+Content-Type: application/json
+
+{
+  "primary_doctor_id": "doctor_123"
+}

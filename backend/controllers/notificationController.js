@@ -122,7 +122,7 @@ exports.getNotificationsByPatientId = async (req, res, next) => {
 exports.getNotificationById = async (req, res, next) => {
   try {
     const notification = await Notification.findById(req.params.id)
-      .select('-__v');
+      .select('-__v').catch(() => null);
 
     if (!notification) {
       return res.status(404).json({

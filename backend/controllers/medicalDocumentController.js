@@ -1,6 +1,61 @@
 const MedicalDocument = require('../models/MedicalDocument');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
-// AI verification removed: documents are saved directly without external AI calls
+const Notification = require('../models/Notification');
+
+// Helper function to send notification to patient
+async function sendPatientNotification(patientId, document) {
+  try {
+    await Notification.create({
+      user_id: patientId,
+      user_role: 'patient',
+      notification_type: 'document_uploaded',
+      title: 'New Medical Document Available',
+      message: `A new ${document.document_type} has been uploaded to your medical records${document.report_details?.test_date ? ` for test dated ${new Date(document.report_details.test_date).toLocaleDateString()}` : ''}.`,
+      priority: document.report_details?.priority || 'normal',
+      metadata: {
+        document_id: document._id,
+        document_type: document.document_type,
+        file_name: document.file_name
+      }
+    });
+
+    // Update notification timestamp
+    document.notifications.patient_notified_at = new Date();
+    await document.save();
+    
+    console.log(`Patient notification sent for document ${document._id}`);
+  } catch (error) {
+    console.error('Error sending patient notification:', error);
+  }
+}
+
+// Helper function to send notification to doctor
+async function sendDoctorNotification(doctorId, document) {
+  try {
+    await Notification.create({
+      user_id: doctorId,
+      user_role: 'doctor',
+      notification_type: 'document_uploaded',
+      title: 'Lab Report Ready for Review',
+      message: `A ${document.document_type} is ready for your review${document.report_details?.laboratory ? ` from ${document.report_details.laboratory}` : ''}.`,
+      priority: document.report_details?.priority || 'normal',
+      metadata: {
+        document_id: document._id,
+        document_type: document.document_type,
+        patient_id: document.patient_id,
+        file_name: document.file_name
+      }
+    });
+
+    // Update notification timestamp
+    document.notifications.doctor_notified_at = new Date();
+    await document.save();
+    
+    console.log(`Doctor notification sent for document ${document._id}`);
+  } catch (error) {
+    console.error('Error sending doctor notification:', error);
+  }
+}
 
 // @desc    Get all medical documents with filters
 // @route   GET /api/medical-documents
@@ -86,6 +141,8 @@ exports.getDocumentsByPatientId = async (req, res) => {
     if (document_type) filter.document_type = document_type;
     if (category) filter.category = category;
 
+    const documents = await MedicalDocument.find(filter)
+      .sort({ uploaded_at: -1 })
       .limit(parseInt(limit))
       .select('-access_logs');
 
@@ -97,7 +154,7 @@ exports.getDocumentsByPatientId = async (req, res) => {
     });
   } catch (error) {
     console.error('Get documents by patient error:', error);
-        });
+    res.status(500).json({
       success: false,
       message: 'Error retrieving patient documents',
       error: error.message
@@ -199,8 +256,25 @@ exports.createDocument = async (req, res) => {
         uploaded_by,
         document_type = 'other',
         description = '',
-        tags = []
+        tags = [],
+        metadata,
+        notify_patient = true,
+        notify_doctor = true
       } = req.body;
+
+      // Parse metadata if it's a string
+      let reportDetails = {};
+      if (metadata) {
+        const parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+        reportDetails = {
+          test_date: parsedMetadata.test_date || null,
+          laboratory: parsedMetadata.laboratory || '',
+          test_category: parsedMetadata.test_category || '',
+          priority: parsedMetadata.priority || 'normal',
+          ordering_doctor: parsedMetadata.ordering_doctor || '',
+          report_notes: parsedMetadata.report_notes || ''
+        };
+      }
 
       // Auto-categorize document
       const category = MedicalDocument.autoCategorizeDocument(document_type);
@@ -219,9 +293,22 @@ exports.createDocument = async (req, res) => {
         description,
         tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
         ocr_extracted_text: '',
-        ai_detected_conditions: [],
-        is_ai_verified: false
+        report_details: reportDetails,
+        notifications: {
+          notify_patient: notify_patient === 'true' || notify_patient === true,
+          notify_doctor: notify_doctor === 'true' || notify_doctor === true,
+          patient_notified_at: null,
+          doctor_notified_at: null
+        }
       });
+
+      // Send notifications if enabled
+      if (document.notifications.notify_patient) {
+        await sendPatientNotification(patient_id, document);
+      }
+      if (document.notifications.notify_doctor && reportDetails.ordering_doctor) {
+        await sendDoctorNotification(reportDetails.ordering_doctor, document);
+      }
 
       return res.status(201).json({
         success: true,
@@ -248,8 +335,7 @@ exports.createDocument = async (req, res) => {
       document_type,
       description,
       tags,
-      ocr_extracted_text,
-      ai_detected_conditions
+      ocr_extracted_text
     } = req.body;
 
     // Auto-categorize document
@@ -267,9 +353,7 @@ exports.createDocument = async (req, res) => {
       category,
       description,
       tags: tags || [],
-      ocr_extracted_text: ocr_extracted_text || '',
-      ai_detected_conditions: ai_detected_conditions || [],
-      is_ai_verified: !!ai_detected_conditions?.length
+      ocr_extracted_text: ocr_extracted_text || ''
     });
 
     res.status(201).json({
@@ -302,6 +386,7 @@ exports.updateDocument = async (req, res) => {
       ai_detected_conditions,
       is_ai_verified,
       updated_by,
+      updated_by,
       ip_address
     } = req.body;
 
@@ -322,12 +407,7 @@ exports.updateDocument = async (req, res) => {
       document.category = category || MedicalDocument.autoCategorizeDOcument(document_type);
     }
     if (category) document.category = category;
-    if (ocr_extracted_text !== undefined) document.ocr_extracted_text = ocr_extracted_text;
-    if (ai_detected_conditions) document.ai_detected_conditions = ai_detected_conditions;
-    if (is_ai_verified !== undefined) document.is_ai_verified = is_ai_verified;
-
-    await document.save();
-
+    if (ocr_extracted_text !== undefined) document.ocr_extracted_text = ocr_extracted_text
     // Add access log
     if (updated_by) {
       await document.addAccessLog(updated_by, 'updated', ip_address);
@@ -684,3 +764,106 @@ exports.logDownload = async (req, res) => {
     });
   }
 };
+
+// @desc    Get lab reporter dashboard statistics
+// @route   GET /api/medical-documents/lab-reporter-stats
+// @access  Private
+exports.getLabReporterStats = async (req, res) => {
+  try {
+    const { uploaded_by } = req.query;
+
+    // Get total uploads
+    const totalUploads = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get uploads this week
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const uploadsThisWeek = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      uploaded_at: { $gte: oneWeekAgo },
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get active documents
+    const activeDocuments = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      is_active: true,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get inactive reports (is_active: false)
+    const inactiveReports = await MedicalDocument.countDocuments({
+      is_deleted: false,
+      is_active: false,
+      ...(uploaded_by && { uploaded_by })
+    });
+
+    // Get recent uploads
+    const recentUploads = await MedicalDocument.find({
+      is_deleted: false,
+      ...(uploaded_by && { uploaded_by })
+    })
+      .sort({ uploaded_at: -1 })
+      .limit(10)
+      .select('patient_id document_type file_name file_size uploaded_at is_ai_verified is_active report_details');
+
+    // Format recent uploads
+    const formattedUploads = recentUploads.map(doc => {
+      let status = 'pending';ctive report_details');
+
+    // Format recent uploads
+    const formattedUploads = recentUploads.map(doc => {
+      let status = 'active';
+      if (!doc.is_active) status = 'inactive
+        patientId: doc.patient_id,
+        reportType: doc.document_type,
+        uploadedDate: getTimeAgo(doc.uploaded_at),
+        status,
+        fileSize: formatFileSize(doc.file_size),
+        laboratory: doc.report_details?.laboratory || 'N/A'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUploads,
+        uploadsThisWeek,
+        pendingVerification,
+        verifiedToday,
+        rejectedReports,
+        recentUploads: formattedUploads
+      }
+    });
+  } catch (error) {
+    console.error('Get lab reporter stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving statistics',
+      error: error.message
+    });activeDocuments,
+        inactive
+
+// Helper function to format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Helper function to get time ago
+function getTimeAgo(date) {
+  const now = new Date();
+  const seconds = Math.floor((now - new Date(date)) / 1000);
+  
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+  if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+  return new Date(date).toLocaleDateString();
+}

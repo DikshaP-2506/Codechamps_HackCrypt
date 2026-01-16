@@ -1,6 +1,26 @@
 ### Health Check
 GET http://localhost:5001/health
 
+###################################################
+# USER ENDPOINTS
+###################################################
+
+### Get All Doctors
+GET http://localhost:5001/api/users/doctors
+
+### Get All Nurses
+GET http://localhost:5001/api/users/by-role/nurse
+
+### Get All Lab Reporters
+GET http://localhost:5001/api/users/by-role/lab_reporter
+
+### Get All Patients (from Users collection)
+GET http://localhost:5001/api/users/by-role/patient
+
+###################################################
+# PATIENT PROFILE ENDPOINTS
+###################################################
+
 ### Get All Patients
 GET http://localhost:5001/api/patients
 
@@ -688,3 +708,14 @@ Content-Type: application/json
 
 ### Get All Logs After Creating Multiple Entries
 GET http://localhost:5001/api/mental-health/patient/9897?limit=100
+
+###################################################
+# LAB REPORTER DASHBOARD STATISTICS
+###################################################
+
+### Get Lab Reporter Dashboard Statistics (All Documents)
+GET http://localhost:5001/api/medical-documents/stats/lab-reporter
+
+### Get Lab Reporter Dashboard Statistics (By Uploader)
+GET http://localhost:5001/api/medical-documents/stats/lab-reporter?uploaded_by=lab_reporter_id
+

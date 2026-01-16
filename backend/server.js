@@ -66,6 +66,7 @@ app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/medical-documents', require('./routes/medicalDocumentRoutes'));
 app.use('/api/mental-health', require('./routes/mentalHealthRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // Root route
 app.get('/', (req, res) => {
@@ -97,6 +98,9 @@ app.use((req, res, next) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+
+  // Ensure we always send JSON response
+  res.setHeader('Content-Type', 'application/json');
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {

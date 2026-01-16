@@ -11,12 +11,18 @@ const {
   addAllergy,
   addChronicCondition,
   addSurgery,
-  updateFamilyHistory
+  updateFamilyHistory,
+  getPatientsByDoctor,
+  getComprehensivePatientData
 } = require('../controllers/patientController');
 const { validatePatient, validateAutoSave } = require('../middleware/validators');
 
 // Statistics route (must be before /:id route)
 router.get('/stats/overview', getPatientStats);
+
+// Doctor-specific routes (must be before /:id route)
+router.get('/doctor/:doctorId', getPatientsByDoctor);
+router.get('/:patientId/comprehensive', getComprehensivePatientData);
 
 // Main patient routes
 router.route('/')

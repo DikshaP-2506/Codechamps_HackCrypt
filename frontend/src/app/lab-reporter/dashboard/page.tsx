@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
@@ -44,15 +45,11 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userData }: { active: string; userData: any }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/lab-reporter/dashboard" },
     { id: "upload", label: "Upload Reports", icon: Upload, href: "/lab-reporter/upload" },
-    { id: "my-uploads", label: "My Uploads", icon: List, href: "/lab-reporter/my-uploads" },
-    { id: "pending", label: "Pending Review", icon: Clock, href: "/lab-reporter/pending" },
-    { id: "verified", label: "Verified Reports", icon: CheckCircle2, href: "/lab-reporter/verified" },
-    { id: "analytics", label: "Analytics", icon: BarChart3, href: "/lab-reporter/analytics" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/lab-reporter/settings" },
+   
   ];
 
   return (
@@ -60,13 +57,11 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-teal-600 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="John Smith" size={48} />
+          <Avatar name={userData?.name || "Lab Reporter"} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">John Smith</p>
-            <p className="text-xs text-teal-200">Lab Technician</p>
-            <span className="mt-1 inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-semibold text-white">
-              ID #LR-2847
-            </span>
+            <p className="font-semibold text-white">{userData?.name || "Loading..."}</p>
+            <p className="text-xs text-teal-200">{userData?.role === 'lab_reporter' ? 'Lab Reporter' : 'Lab Technician'}</p>
+            
           </div>
         </div>
       </div>
@@ -193,44 +188,88 @@ function ReportCard({
 
 // Main Lab Reporter Dashboard Component
 export default function LabReporterDashboard() {
+  const { user } = useUser();
   const [notificationCount] = useState(3);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  
+  // State for real data from database
+  const [stats, setStats] = useState({
+    totalUploads: 0,
+    uploadsThisWeek: 0,
+    pendingVerification: 0,
+    verifiedToday: 0,
+    rejectedReports: 0
+  });
+  const [recentUploads, setRecentUploads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState<any>(null);
 
-  // Mock data
-  const recentUploads = [
-    {
-      id: 1,
-      patientName: "John Doe",
-      patientId: "P-12847",
-      reportType: "Blood Test - Complete Panel",
-      uploadedDate: "2 hours ago",
-      status: "verified" as const,
-      fileSize: "2.3 MB",
-    },
-    {
-      id: 2,
-      patientName: "Jane Smith",
-      patientId: "P-13892",
-      reportType: "X-Ray Chest PA View",
-      uploadedDate: "4 hours ago",
-      status: "pending" as const,
-      fileSize: "1.8 MB",
-    },
-    {
-      id: 3,
-      patientName: "Robert Johnson",
-      patientId: "P-14523",
-      reportType: "MRI Brain with Contrast",
-      uploadedDate: "1 day ago",
-      status: "verified" as const,
-      fileSize: "45.2 MB",
-    },
-  ];
+  // Fetch user data from database
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user]);
+
+  // Fetch dashboard data on mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/users/profile?clerkId=${user?.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setUserData(data.user);
+      } else {
+        // Fallback to Clerk data
+        setUserData({
+          name: user?.fullName || user?.firstName + ' ' + user?.lastName,
+          email: user?.primaryEmailAddress?.emailAddress,
+          id: user?.id,
+          role: 'lab_reporter'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Fallback to Clerk data
+      setUserData({
+        name: user?.fullName || user?.firstName + ' ' + user?.lastName,
+        email: user?.primaryEmailAddress?.emailAddress,
+        id: user?.id,
+        role: 'lab_reporter'
+      });
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/medical-documents/stats/lab-reporter');
+      const data = await response.json();
+      
+      if (data.success) {
+        setStats({
+          totalUploads: data.data.totalUploads,
+          uploadsThisWeek: data.data.uploadsThisWeek,
+          pendingVerification: data.data.pendingVerification,
+          verifiedToday: data.data.verifiedToday,
+          rejectedReports: data.data.rejectedReports
+        });
+        setRecentUploads(data.data.recentUploads);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="dashboard" />
+      <Sidebar active="dashboard" userData={userData} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
@@ -249,11 +288,7 @@ export default function LabReporterDashboard() {
 
             {/* Right Section */}
             <div className="flex items-center gap-4">
-              {/* Quick Upload */}
-              <button className="flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700">
-                <Upload className="h-4 w-4" />
-                Quick Upload
-              </button>
+              
 
               {/* Notifications */}
               <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
@@ -272,7 +307,7 @@ export default function LabReporterDashboard() {
 
               {/* Profile Avatar */}
               <div className="rounded-full border-2 border-teal-200">
-                <Avatar name="John Smith" size={40} />
+                <Avatar name={userData?.name || "Lab Reporter"} size={40} />
               </div>
             </div>
           </div>
@@ -291,31 +326,11 @@ export default function LabReporterDashboard() {
             <MetricCard
               icon={<Upload className="h-6 w-6" />}
               title="Total Uploads"
-              value="1,247"
-              subtitle="+23 this week"
+              value={loading ? "..." : stats.totalUploads}
+              subtitle={`+${stats.uploadsThisWeek} this week`}
               variant="default"
             />
-            <MetricCard
-              icon={<Clock className="h-6 w-6" />}
-              title="Pending Verification"
-              value="34"
-              subtitle="Action required"
-              variant="warning"
-            />
-            <MetricCard
-              icon={<CheckCircle2 className="h-6 w-6" />}
-              title="Verified Today"
-              value="89"
-              subtitle="98.5% accuracy"
-              variant="success"
-            />
-            <MetricCard
-              icon={<XCircle className="h-6 w-6" />}
-              title="Rejected Reports"
-              value="3"
-              subtitle="Review required"
-              variant="error"
-            />
+            
           </div>
 
           {/* Recent Uploads & Quick Stats */}
@@ -330,42 +345,48 @@ export default function LabReporterDashboard() {
               </div>
 
               <div className="space-y-3">
-                {recentUploads.map((report) => (
-                  <div key={report.id} className="rounded-lg border border-gray-100 bg-gray-50 p-4 hover:bg-gray-100 transition">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-semibold text-gray-900">{report.reportType}</p>
-                        <p className="text-sm text-gray-600">Patient: {report.patientName} ({report.patientId})</p>
-                        <p className="mt-2 text-xs text-gray-500">Uploaded: {report.uploadedDate} • {report.fileSize}</p>
+                {loading ? (
+                  <div className="text-center py-8 text-gray-500">Loading uploads...</div>
+                ) : recentUploads.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">No uploads yet</div>
+                ) : (
+                  recentUploads.map((report) => (
+                    <div key={report.id} className="rounded-lg border border-gray-100 bg-gray-50 p-4 hover:bg-gray-100 transition">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{report.reportType}</p>
+                          <p className="text-sm text-gray-600">Patient: {report.patientName}</p>
+                          <p className="mt-2 text-xs text-gray-500">Uploaded: {report.uploadedDate} • {report.fileSize}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            report.status === "verified"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : report.status === "pending"
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700"
+                          }`}>
+                            {report.status === "verified" ? "✓ Verified" : report.status === "pending" ? "⏳ Pending" : "❌ Rejected"}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          report.status === "verified"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : report.status === "pending"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
-                        }`}>
-                          {report.status === "verified" ? "✓ Verified" : report.status === "pending" ? "⏳ Pending" : "❌ Rejected"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex gap-2">
-                      <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
-                        <Eye className="inline h-4 w-4 mr-1" />
-                        View
-                      </button>
-                      <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
-                        <Download className="inline h-4 w-4 mr-1" />
-                        Download
-                      </button>
+                      <div className="mt-3 flex gap-2">
+                        <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
+                          <Eye className="inline h-4 w-4 mr-1" />
+                          View
+                        </button>
+                        <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
+                          <Download className="inline h-4 w-4 mr-1" />
+                          Download
+                        </button>
                       <button className="text-xs font-medium text-gray-600 hover:text-gray-900">
                         <Edit className="inline h-4 w-4 mr-1" />
                         Edit
                       </button>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -383,49 +404,11 @@ export default function LabReporterDashboard() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Quick Actions</p>
-                <button className="w-full rounded-lg bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 p-3 text-sm font-medium text-teal-700 hover:bg-teal-100 transition">
-                  <Upload className="inline h-4 w-4 mr-2" />
-                  Upload Report
-                </button>
-                <button className="w-full rounded-lg bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 p-3 text-sm font-medium text-teal-700 hover:bg-teal-100 transition">
-                  <BarChart3 className="inline h-4 w-4 mr-2" />
-                  View Analytics
-                </button>
-              </div>
+              
             </div>
           </div>
 
-          {/* Verification Status Overview */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-lg font-bold text-gray-900">Verification Status</h2>
-            <div className="grid grid-cols-4 gap-4">
-              {[
-                { label: "Verified", count: 856, color: "bg-emerald-500" },
-                { label: "Pending", count: 34, color: "bg-amber-500" },
-                { label: "Rejected", count: 12, color: "bg-red-500" },
-                { label: "Processing", count: 18, color: "bg-blue-500" },
-              ].map((item) => (
-                <div key={item.label} className="rounded-lg bg-gray-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">{item.label}</p>
-                      <p className="mt-2 text-2xl font-bold text-gray-900">{item.count}</p>
-                    </div>
-                    <div className={`h-12 w-12 rounded-lg ${item.color} opacity-20`} />
-                  </div>
-                  <div className="mt-3 h-1 w-full rounded-full bg-gray-200 overflow-hidden">
-                    <div
-                      className={`h-full ${item.color}`}
-                      style={{ width: `${(item.count / 920) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          
         </main>
       </div>
     </div>

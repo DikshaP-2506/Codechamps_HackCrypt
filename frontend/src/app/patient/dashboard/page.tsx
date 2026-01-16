@@ -210,6 +210,12 @@ export default function PatientDashboard() {
               <div className="space-y-3">
                 {[
                   {
+                    icon: Activity,
+                    label: "Log Vitals",
+                    gradient: "bg-gradient-to-br from-emerald-500 to-emerald-700",
+                    href: "/patient/health",
+                  },
+                  {
                     icon: Pill,
                     label: "View Medications",
                     gradient: "bg-gradient-to-br from-blue-500 to-blue-700",

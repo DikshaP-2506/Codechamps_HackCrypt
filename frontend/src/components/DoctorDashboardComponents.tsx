@@ -305,7 +305,8 @@ export function PendingReminders() {
     const fetchReminders = async () => {
       try {
         const data = await appointmentsAPI.getPendingReminders();
-        setReminders(data.data || []);
+        const pending = Array.isArray(data?.data) ? data.data : [];
+        setReminders(pending);
       } finally {
         setLoading(false);
       }

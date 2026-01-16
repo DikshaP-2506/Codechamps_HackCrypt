@@ -78,8 +78,6 @@ function Sidebar({ active, userName, userImage }: { active: string; userName: st
     { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/patient/wellness" },
     { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/patient/chat" },
     { id: "community", label: "Community", icon: Users, href: "/patient/community" },
-    { id: "profile", label: "My Profile", icon: User, href: "/patient/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/patient/settings" },
   ];
 
   return (

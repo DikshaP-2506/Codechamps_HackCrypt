@@ -33,6 +33,7 @@ import {
   PendingReminders,
   DoctorStatsCard,
 } from "@/components/DoctorDashboardComponents";
+import { DoctorTopBar } from "@/components/DoctorTopBar";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
@@ -140,100 +141,7 @@ function Sidebar() {
   );
 }
 
-// Top Bar Component
-function TopBar() {
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
-  const [profileOpen, setProfileOpen] = useState(false);
-  const alertCount = 5;
-  const userName = user?.fullName || "Emily Carter";
-  const userImage = user?.imageUrl;
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-  };
-
-  return (
-    <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
-        {/* Left: Search */}
-        <div className="flex items-center gap-3 flex-1">
-          <button className="rounded-lg border border-gray-200 p-2 hover:bg-gray-100 md:hidden">
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="relative hidden w-80 sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search patients, appointments..."
-              className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
-            />
-          </div>
-        </div>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-4">
-          {/* Alert Bell */}
-          <div className="relative">
-            <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-              <Bell className="h-6 w-6" />
-            </button>
-            {alertCount > 0 && (
-              <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white animate-pulse-soft">
-                {alertCount}
-              </div>
-            )}
-          </div>
-
-          {/* Settings */}
-          <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:rotate-45 duration-300">
-            <Settings className="h-6 w-6" />
-          </button>
-
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center rounded-full border border-gray-200 p-1 transition hover:border-gray-300"
-            >
-              <Avatar name={userName} imageUrl={userImage} size={40} />
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
-                <div className="p-2">
-                  {[
-                    { label: "Profile", icon: Users },
-                    { label: "Account Settings", icon: Settings },
-                    { label: "Help & Support", icon: HelpCircle },
-                  ].map(({ label, icon: Icon }) => (
-                    <button
-                      key={label}
-                      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-emerald-50"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                  <div className="my-2 h-px bg-gray-200" />
-                  <button 
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Top Bar Component now shared via DoctorTopBar
 
 // Stat Card Component
 function StatCard({
@@ -652,7 +560,7 @@ export default function DoctorDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <TopBar />
+      <DoctorTopBar searchPlaceholder="Search patients, appointments..." notificationCount={5} />
 
       {/* Main Content */}
       <main className="md:ml-60">

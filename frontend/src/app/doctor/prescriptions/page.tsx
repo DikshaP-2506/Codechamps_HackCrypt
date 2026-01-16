@@ -7,45 +7,45 @@ import {
   Activity,
   Pill,
   Bell,
-  Calendar,
-  Folder,
-  MessageCircle,
-  Users,
-  User,
-  Settings,
-  LogOut,
-  Search,
-  BookOpen,
-  Plus,
-  X,
-  Download,
-  FileText,
-  Eye,
-  Copy,
-  Trash2,
-  Send,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  QrCode,
-  Edit,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
-
-// Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div
-      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
-      style={{ width: size, height: size, fontSize: size * 0.35 }}
+  import {
+    Home,
+    Users,
+    Calendar,
+    Pill,
+    Folder,
+    MessageCircle,
+    BookOpen,
+    User,
+    Settings,
+    LogOut,
+    Search,
+    Plus,
+    AlertCircle,
+    Check,
+    ChevronDown,
+    ChevronUp,
+    X,
+    ClipboardList,
+    Download,
+    Printer,
+    Edit3,
+    Activity,
+    Thermometer,
+    Droplets,
+    Heart,
+    TrendingUp,
+    Shield,
+    Upload,
+    Mic,
+    LayoutGrid,
+    List,
+    Clock,
+    Trash,
+    CheckCircle,
+    Mail,
+    Phone,
+  } from "lucide-react";
+  import { DoctorTopBar } from "@/components/DoctorTopBar";
     >
       {initials}
     </div>
@@ -739,43 +739,10 @@ export default function DoctorPrescriptions() {
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Search Bar */}
-            <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 w-96">
-              <Search className="h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search prescriptions..."
-                className="flex-1 border-none bg-transparent text-sm outline-none"
-              />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Bell className="h-6 w-6" />
-                {notificationCount > 0 && (
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {notificationCount}
-                  </div>
-                )}
-              </button>
-
-              {/* Settings */}
-              <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Settings className="h-6 w-6" />
-              </button>
-
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-purple-200">
-                <Avatar name={doctorName} size={40} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <DoctorTopBar
+          searchPlaceholder="Search prescriptions..."
+          notificationCount={notificationCount}
+        />
 
         {/* Main Content */}
         <main className="p-8">

@@ -70,7 +70,7 @@ export default function PatientDocumentsPage() {
     formData.append('description', uploadData.description);
 
     try {
-      const response = await fetch('http://localhost:5001/api/medical-documents/upload', {
+      const response = await fetch('http://localhost:5000/api/medical-documents/upload', {
         method: 'POST',
         body: formData,
       });

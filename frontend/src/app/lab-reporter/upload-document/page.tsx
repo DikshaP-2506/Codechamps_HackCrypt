@@ -82,7 +82,7 @@ export default function LabReporterUploadPage() {
     uploadFormData.append('metadata', JSON.stringify(metadata));
 
     try {
-      const response = await fetch('http://localhost:5001/api/medical-documents/upload', {
+      const response = await fetch('http://localhost:5000/api/medical-documents/upload', {
         method: 'POST',
         body: uploadFormData,
       });

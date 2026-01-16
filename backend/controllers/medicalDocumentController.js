@@ -1,5 +1,6 @@
 const MedicalDocument = require('../models/MedicalDocument');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
+// AI verification removed: documents are saved directly without external AI calls
 
 // @desc    Get all medical documents with filters
 // @route   GET /api/medical-documents
@@ -85,8 +86,6 @@ exports.getDocumentsByPatientId = async (req, res) => {
     if (document_type) filter.document_type = document_type;
     if (category) filter.category = category;
 
-    const documents = await MedicalDocument.find(filter)
-      .sort({ uploaded_at: -1 })
       .limit(parseInt(limit))
       .select('-access_logs');
 
@@ -98,7 +97,7 @@ exports.getDocumentsByPatientId = async (req, res) => {
     });
   } catch (error) {
     console.error('Get documents by patient error:', error);
-    res.status(500).json({
+        });
       success: false,
       message: 'Error retrieving patient documents',
       error: error.message
@@ -137,14 +136,12 @@ exports.getDocumentsByUploader = async (req, res) => {
     });
   }
 };
-
-// @desc    Get single document by ID with access log
 // @route   GET /api/medical-documents/:id
 // @access  Private
 exports.getDocumentById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { user_id, ip_address } = req.query;
+      });
 
     const document = await MedicalDocument.findById(id);
 

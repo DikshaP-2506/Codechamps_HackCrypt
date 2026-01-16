@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Home,
   Users,
@@ -59,17 +60,17 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 // Sidebar Component (reused from dashboard)
 function Sidebar() {
   const navItems = [
-    { label: "Dashboard", icon: Home },
-    { label: "Patients", icon: Users, active: true },
-    { label: "Appointments", icon: Calendar },
-    { label: "Analytics", icon: BarChart2 },
-    { label: "Documents", icon: FileText },
-    { label: "Prescriptions", icon: Pill },
-    { label: "Treatment Plans", icon: Target },
-    { label: "Teleconsultation", icon: Video },
-    { label: "Wellness Library", icon: Heart },
-    { label: "Collaboration", icon: Users },
-    { label: "Settings", icon: Settings },
+    { label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
+    { label: "Patients", icon: Users, active: true, href: "/doctor/patients" },
+    { label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
+    { label: "Analytics", icon: BarChart2, href: "/doctor/analytics" },
+    { label: "Documents", icon: FileText, href: "/doctor/documents" },
+    { label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
+    { label: "Treatment Plans", icon: Target, href: "/doctor/treatment-plans" },
+    { label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
+    { label: "Wellness Library", icon: Heart, href: "/doctor/wellness" },
+    { label: "Collaboration", icon: Users, href: "/doctor/collaboration" },
+    { label: "Settings", icon: Settings, href: "/doctor/settings" },
   ];
 
   return (
@@ -87,9 +88,10 @@ function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, active }) => (
-          <button
+        {navItems.map(({ label, icon: Icon, active, href }) => (
+          <Link
             key={label}
+            href={href}
             className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
               active
                 ? "bg-emerald-100/20 text-white"
@@ -98,7 +100,7 @@ function Sidebar() {
           >
             <Icon className="h-5 w-5" />
             <span>{label}</span>
-          </button>
+          </Link>
         ))}
       </nav>
 

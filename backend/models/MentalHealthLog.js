@@ -18,7 +18,7 @@ const mentalHealthLogSchema = new mongoose.Schema({
 
   mood_rating: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 10,
     required: false
   },
@@ -40,7 +40,7 @@ const mentalHealthLogSchema = new mongoose.Schema({
   },
   sleep_quality: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 10,
     required: false
   },

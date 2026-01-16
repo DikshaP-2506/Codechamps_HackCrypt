@@ -74,11 +74,13 @@ export function PatientTopBar({
               ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">
                   {userName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
+                    ? userName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()
+                    : "PA"}
                 </div>
               )}
             </button>

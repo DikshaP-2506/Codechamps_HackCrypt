@@ -57,7 +57,7 @@ function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string
 }
 
 // Sidebar Component
-function Sidebar({ active, userName, userImage }: { active: string; userName: string; userImage?: string }) {
+function Sidebar({ active, userName, userImage, onLogout }: { active: string; userName: string; userImage?: string; onLogout?: () => void }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
     { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
@@ -107,7 +107,10 @@ function Sidebar({ active, userName, userImage }: { active: string; userName: st
 
       {/* Logout */}
       <div className="border-t border-emerald-700 p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-700/50">
+        <button
+          onClick={onLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-700/50"
+        >
           <LogOut className="h-5 w-5" />
           <span>Logout</span>
         </button>
@@ -622,7 +625,7 @@ export default function PatientMedications() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="medications" userName={patientName} userImage={patientImage} />
+      <Sidebar active="medications" userName={patientName} userImage={patientImage} onLogout={handleLogout} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">

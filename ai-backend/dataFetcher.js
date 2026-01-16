@@ -165,16 +165,13 @@ function formatPatientData(data) {
 
 /**
  * Logs fetched data details to console
- * @param {string} sessionId - Session ID
- * @param {string} userId - User ID
  * @param {Object} patientData - Patient data object
  */
-function logFetchedData(sessionId, userId, patientData) {
+function logFetchedData(patientData) {
   console.log('\n========================================');
   console.log('📊 PATIENT DATA FETCHED');
   console.log('========================================');
-  console.log('Session ID:', sessionId);
-  console.log('User ID:', userId);
+  console.log('Patient ID:', patientData.patientId);
   console.log('\n✓ Profile:', patientData.profile ? `Found (${patientData.profile.name || 'N/A'})` : 'Not found');
   console.log('✓ Latest Vitals:', patientData.latestVitals ? 'Found' : 'Not found');
   if (patientData.latestVitals) {

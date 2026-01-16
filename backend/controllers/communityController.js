@@ -20,14 +20,14 @@ exports.createCommunityGroup = async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const { name, topic, description, visibility = 'public' } = req.body || {};
+    const { name, topic, description } = req.body || {};
     if (!name) return res.status(400).json({ success: false, message: 'Name is required' });
 
     const group = await CommunityGroup.create({
       name,
       topic: topic || '',
       description: description || '',
-      visibility: visibility === 'private' ? 'private' : 'public',
+      visibility: 'public', // Always set to public
       creator_id: userId,
     });
 
@@ -245,5 +245,15 @@ exports.listCommunityMessages = async (req, res) => {
   } catch (err) {
     console.error('List community messages error:', err);
     return res.status(500).json({ success: false, message: 'Failed to fetch messages', error: err.message });
+  }
+};
+// Update all groups to public (one-time migration)
+exports.setAllGroupsPublic = async (req, res) => {
+  try {
+    const result = await CommunityGroup.updateMany({}, { $set: { visibility: 'public' } });
+    return res.json({ success: true, message: `Updated ${result.modifiedCount} groups to public`, result });
+  } catch (err) {
+    console.error('Set all groups public error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to update groups', error: err.message });
   }
 };

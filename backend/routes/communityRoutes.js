@@ -9,12 +9,14 @@ const {
   approveCommunityRequest,
   deleteCommunityGroup,
   listCommunityMessages,
+  setAllGroupsPublic,
 } = require('../controllers/communityController');
 
 const router = express.Router();
 
 router.get('/', listCommunityGroups);
 router.post('/', createCommunityGroup);
+router.post('/set-all-public', setAllGroupsPublic); // Migration endpoint
 router.get('/:id', getCommunityGroup);
 router.post('/:id/join', joinCommunityGroup);
 router.post('/:id/leave', leaveCommunityGroup);

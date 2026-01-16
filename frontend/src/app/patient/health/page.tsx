@@ -269,6 +269,294 @@ function TreatmentPlanCard({
   );
 }
 
+// Log Mood Modal Component
+function LogMoodModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  patientId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  patientId?: string;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    mood_rating: "",
+    stress_level: "",
+    anxiety_level: "",
+    sleep_hours: "",
+    sleep_quality: "",
+    phq9_score: "",
+    gad7_score: "",
+    notes: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        patient_id: patientId,
+        recorded_by: patientId,
+        mood_rating: formData.mood_rating ? parseInt(formData.mood_rating) : null,
+        stress_level: formData.stress_level || null,
+        anxiety_level: formData.anxiety_level || null,
+        sleep_hours: formData.sleep_hours ? parseFloat(formData.sleep_hours) : null,
+        sleep_quality: formData.sleep_quality ? parseInt(formData.sleep_quality) : null,
+        phq9_score: formData.phq9_score ? parseInt(formData.phq9_score) : null,
+        gad7_score: formData.gad7_score ? parseInt(formData.gad7_score) : null,
+        notes: formData.notes,
+      };
+
+      console.log("Submitting mood log:", payload);
+
+      const response = await fetch("/api/mental-health", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("API Response:", result);
+
+      if (response.ok && result.success) {
+        setFormData({
+          mood_rating: "",
+          stress_level: "",
+          anxiety_level: "",
+          sleep_hours: "",
+          sleep_quality: "",
+          phq9_score: "",
+          gad7_score: "",
+          notes: "",
+        });
+        onClose();
+        await onSuccess();
+      } else {
+        console.error("API error:", response.status, result);
+        alert("Failed to save mood log: " + (result.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error submitting mood log:", error);
+      alert("Error submitting mood log. Check console for details.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Log Mood</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 transition hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Mood Rating */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Mood Rating (0-10)
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                name="mood_rating"
+                value={formData.mood_rating || 0}
+                onChange={handleChange}
+                min="0"
+                max="10"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <span className="text-2xl font-bold text-blue-600 w-12 text-center">
+                {formData.mood_rating || "0"}
+              </span>
+            </div>
+          </div>
+
+          {/* Stress and Anxiety */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Stress Level
+              </label>
+              <select
+                name="stress_level"
+                value={formData.stress_level}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              >
+                <option value="">Select...</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Anxiety Level
+              </label>
+              <select
+                name="anxiety_level"
+                value={formData.anxiety_level}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              >
+                <option value="">Select...</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Sleep Information */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Sleep Hours (0-24)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  name="sleep_hours"
+                  value={formData.sleep_hours || 0}
+                  onChange={handleChange}
+                  placeholder="7.5"
+                  step="0.5"
+                  min="0"
+                  max="24"
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-lg font-bold text-blue-600 w-16 text-center">
+                  {formData.sleep_hours || "0"}h
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Sleep Quality (0-10)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  name="sleep_quality"
+                  value={formData.sleep_quality || 0}
+                  onChange={handleChange}
+                  placeholder="8"
+                  min="0"
+                  max="10"
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-lg font-bold text-blue-600 w-12 text-center">
+                  {formData.sleep_quality || "0"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Assessment Scores */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                PHQ-9 Score (0-27)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  name="phq9_score"
+                  value={formData.phq9_score || 0}
+                  onChange={handleChange}
+                  placeholder="Depression score"
+                  min="0"
+                  max="27"
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-lg font-bold text-blue-600 w-12 text-center">
+                  {formData.phq9_score || "0"}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                GAD-7 Score (0-21)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  name="gad7_score"
+                  value={formData.gad7_score || 0}
+                  onChange={handleChange}
+                  placeholder="Anxiety score"
+                  min="0"
+                  max="21"
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-lg font-bold text-blue-600 w-12 text-center">
+                  {formData.gad7_score || "0"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Notes
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              placeholder="Any additional thoughts or observations..."
+              rows={3}
+              maxLength={1000}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:bg-gray-400"
+            >
+              {isSubmitting ? "Saving..." : "Save Mood Entry"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // Log Vitals Modal Component
 function LogVitalsModal({
   isOpen,
@@ -591,8 +879,10 @@ export default function PatientHealth() {
   const { user } = useUser();
   const [notificationCount] = useState(5);
   const [dateRange, setDateRange] = useState<"7" | "30" | "90">("7");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
+  const [isMoodModalOpen, setIsMoodModalOpen] = useState(false);
   const [latestVitals, setLatestVitals] = useState<any>(null);
+  const [latestMood, setLatestMood] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   const patientName = user?.fullName || "Patient";
@@ -619,8 +909,28 @@ export default function PatientHealth() {
     }
   };
 
+  // Fetch latest mood from MongoDB
+  const fetchLatestMood = async () => {
+    if (!user?.id) return;
+    try {
+      console.log("Fetching mood logs for patient:", user.id);
+      const response = await fetch(`/api/mental-health/patient/${user.id}`);
+      const result = await response.json();
+      console.log("Mood logs response:", result);
+      if (result.success && result.data.length > 0) {
+        setLatestMood(result.data[0]);
+        console.log("Latest mood set:", result.data[0]);
+      } else {
+        console.log("No mood logs found");
+      }
+    } catch (error) {
+      console.error("Error fetching mood logs:", error);
+    }
+  };
+
   useEffect(() => {
     fetchLatestVitals();
+    fetchLatestMood();
   }, [user?.id]);
 
   const getVitalStatus = (name: string, value?: number): "normal" | "warning" | "critical" | "none" => {
@@ -719,29 +1029,29 @@ export default function PatientHealth() {
     {
       icon: Smile,
       label: "Mood Score",
-      value: "7/10",
-      status: "7-day average",
+      value: latestMood?.mood_rating !== undefined && latestMood?.mood_rating !== null ? `${latestMood.mood_rating}/10` : "Not logged",
+      status: latestMood?.recorded_date ? formatDate(latestMood.recorded_date) : "Never logged",
       color: "bg-blue-500",
     },
     {
       icon: Brain,
       label: "Stress Level",
-      value: "Medium",
-      status: "↓ 10% from last week",
+      value: latestMood?.stress_level ? latestMood.stress_level.charAt(0).toUpperCase() + latestMood.stress_level.slice(1) : "Not logged",
+      status: latestMood?.recorded_date ? formatDate(latestMood.recorded_date) : "Never logged",
       color: "bg-yellow-500",
     },
     {
       icon: AlertCircle,
       label: "Anxiety Score",
-      value: "8/21",
-      status: "Mild (GAD-7)",
+      value: latestMood?.gad7_score !== undefined && latestMood?.gad7_score !== null ? `${latestMood.gad7_score}/21` : "Not logged",
+      status: latestMood?.anxiety_level ? latestMood.anxiety_level.charAt(0).toUpperCase() + latestMood.anxiety_level.slice(1) : "Never logged",
       color: "bg-orange-500",
     },
     {
       icon: Moon,
       label: "Sleep Quality",
-      value: "3.5/5",
-      status: "Avg 6.5h last 7 nights",
+      value: latestMood?.sleep_quality !== undefined && latestMood?.sleep_quality !== null ? `${latestMood.sleep_quality}/10` : "Not logged",
+      status: latestMood?.sleep_hours !== undefined && latestMood?.sleep_hours !== null ? `${latestMood.sleep_hours}h sleep` : "Never logged",
       color: "bg-indigo-500",
     },
   ];
@@ -798,7 +1108,7 @@ export default function PatientHealth() {
               </p>
             </div>
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => setIsVitalsModalOpen(true)}
               className="rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-emerald-700"
             >
               Log New Vitals
@@ -899,7 +1209,9 @@ export default function PatientHealth() {
           <div className="mb-8">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900">Mental Health</h2>
-              <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
+              <button 
+                onClick={() => setIsMoodModalOpen(true)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
                 Log Mood
               </button>
             </div>
@@ -909,45 +1221,21 @@ export default function PatientHealth() {
               ))}
             </div>
           </div>
-
-          {/* Photo/Video Upload Section */}
-          <div className="mb-8">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-bold text-gray-900">
-                Symptom Documentation
-              </h2>
-              <div className="flex items-center gap-4">
-                <button className="flex items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 text-sm font-medium text-gray-700 transition hover:border-emerald-500 hover:bg-emerald-50">
-                  <Camera className="h-5 w-5" />
-                  Take Photo
-                </button>
-                <button className="flex items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 text-sm font-medium text-gray-700 transition hover:border-emerald-500 hover:bg-emerald-50">
-                  <Upload className="h-5 w-5" />
-                  Upload from Gallery
-                </button>
-              </div>
-              <p className="mt-3 text-xs text-gray-500">
-                Upload symptom progress photos, wound healing documentation, or other health-related images
-              </p>
-            </div>
-          </div>
-
-          {/* Treatment Plans Section */}
-          <div className="mb-8">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Active Treatment Plans</h2>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {treatmentPlans.map((plan, idx) => (
-                <TreatmentPlanCard key={idx} {...plan} />
-              ))}
-            </div>
-          </div>
         </main>
       </div>
 
+      {/* Log Mood Modal */}
+      <LogMoodModal
+        isOpen={isMoodModalOpen}
+        onClose={() => setIsMoodModalOpen(false)}
+        onSuccess={fetchLatestMood}
+        patientId={user?.id}
+      />
+
       {/* Log Vitals Modal */}
       <LogVitalsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isVitalsModalOpen}
+        onClose={() => setIsVitalsModalOpen(false)}
         onSuccess={fetchLatestVitals}
         patientId={user?.id}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
@@ -116,7 +117,12 @@ function Sidebar() {
 
 // Top Bar Component
 function TopBar() {
+  const { signOut } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleLogout = () => {
+    signOut({ redirectUrl: "/sign-in" });
+  };
 
   return (
     <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
@@ -164,7 +170,10 @@ function TopBar() {
                     </button>
                   ))}
                   <div className="my-2 h-px bg-gray-200" />
-                  <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
+                  >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </button>

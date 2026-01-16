@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
@@ -283,8 +284,14 @@ function Sidebar({ active }: { active: string }) {
 
 // Main Patient Dashboard Component
 export default function PatientDashboard() {
+  const { signOut } = useAuth();
   const [notificationCount] = useState(5);
+  const [profileOpen, setProfileOpen] = useState(false);
   const patientName = "Sarah Johnson";
+
+  const handleLogout = () => {
+    signOut({ redirectUrl: "/sign-in" });
+  };
 
   const motivationalQuotes = [
     "Your health is an investment, not an expense.",
@@ -460,9 +467,42 @@ export default function PatientDashboard() {
                 <Settings className="h-6 w-6" />
               </button>
 
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-emerald-200">
-                <Avatar name={patientName} size={40} />
+              {/* Profile Avatar with Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center rounded-full border-2 border-emerald-200 p-0 transition hover:border-emerald-300"
+                >
+                  <Avatar name={patientName} size={40} />
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                    <div className="p-2">
+                      {[
+                        { label: "Profile", icon: User },
+                        { label: "Account Settings", icon: Settings },
+                        { label: "Help & Support", icon: HelpCircle },
+                      ].map(({ label, icon: Icon }) => (
+                        <button
+                          key={label}
+                          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-emerald-50"
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                      <div className="my-2 h-px bg-gray-200" />
+                      <button 
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

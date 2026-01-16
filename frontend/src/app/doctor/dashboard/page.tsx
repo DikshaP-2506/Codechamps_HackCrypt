@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   Home,
   Users,
@@ -35,7 +37,18 @@ import {
 } from "lucide-react";
 
 // Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className="rounded-full border border-gray-200 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -55,6 +68,17 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 
 // Sidebar Component
 function Sidebar() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  const userName = user?.fullName || "Dr. Emily Carter";
+  const userImage = user?.imageUrl;
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/sign-in");
+  };
+
   const navItems = [
     { label: "Dashboard", icon: Home, active: true, href: "/doctor/dashboard" },
     { label: "Patients", icon: Users, href: "/doctor/patients" },
@@ -75,11 +99,11 @@ function Sidebar() {
       <div className="border-b border-emerald-700 px-4 py-6">
         <div className="flex flex-col items-center gap-4">
           <div className="transition-transform hover:scale-105">
-            <Avatar name="Dr. Emily Carter" size={56} />
+            <Avatar name={userName} imageUrl={userImage} size={56} />
           </div>
           <div className="text-center">
             <h3 className="text-base font-semibold text-white">
-              Dr. Emily Carter
+              {userName}
             </h3>
             <p className="text-sm text-white/70">Cardiologist</p>
           </div>
@@ -106,7 +130,10 @@ function Sidebar() {
 
       {/* Logout Button */}
       <div className="border-t border-emerald-700 p-4">
-        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-400 transition-all hover:bg-red-500 hover:text-white">
+        <button 
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-400 transition-all hover:bg-red-500 hover:text-white"
+        >
           <LogOut className="h-5 w-5" />
           <span className="text-sm font-medium">Logout</span>
         </button>
@@ -117,8 +144,18 @@ function Sidebar() {
 
 // Top Bar Component
 function TopBar() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const alertCount = 5;
+  const userName = user?.fullName || "Emily Carter";
+  const userImage = user?.imageUrl;
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/sign-in");
+  };
 
   return (
     <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
@@ -163,7 +200,7 @@ function TopBar() {
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex items-center rounded-full border border-gray-200 p-1 transition hover:border-gray-300"
             >
-              <Avatar name="Emily Carter" size={40} />
+              <Avatar name={userName} imageUrl={userImage} size={40} />
             </button>
 
             {profileOpen && (
@@ -183,7 +220,10 @@ function TopBar() {
                     </button>
                   ))}
                   <div className="my-2 h-px bg-gray-200" />
-                  <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
+                  >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </button>

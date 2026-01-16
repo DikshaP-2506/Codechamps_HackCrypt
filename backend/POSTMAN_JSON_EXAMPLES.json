@@ -1,0 +1,233 @@
+{
+  "info": {
+    "name": "Medical Documents API - JSON Examples",
+    "description": "Copy these JSON examples to test the Medical Documents API in Postman"
+  },
+  "examples": {
+    "1. Create Document Manually (Without File Upload)": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "patient_id": "60d5f9e5f1b2c72b8c8e4f1a",
+        "uploaded_by": "doctor_123",
+        "file_name": "blood-test-report.pdf",
+        "file_url": "https://res.cloudinary.com/dt9l4yn08/image/upload/v1234567/sample.pdf",
+        "cloudinary_public_id": "medical_documents/sample_123",
+        "file_size": 245678,
+        "file_type": "application/pdf",
+        "document_type": "lab_report",
+        "description": "Complete blood count test results",
+        "tags": ["blood", "cholesterol", "diabetes", "2026"],
+        "ocr_extracted_text": "Patient Name: John Doe, Test Date: 2026-01-15, Hemoglobin: 14.5 g/dL",
+        "ai_detected_conditions": ["high_cholesterol", "pre_diabetes"]
+      }
+    },
+    "2. Create Lab Report": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents",
+      "body": {
+        "patient_id": "60d5f9e5f1b2c72b8c8e4f1a",
+        "uploaded_by": "dr_smith_456",
+        "file_name": "urine-analysis.pdf",
+        "file_url": "https://example.com/reports/urine-analysis.pdf",
+        "cloudinary_public_id": "medical_docs/urine_123",
+        "file_size": 123456,
+        "file_type": "application/pdf",
+        "document_type": "lab_report",
+        "description": "Routine urine analysis",
+        "tags": ["urine", "kidney", "routine"]
+      }
+    },
+    "3. Create X-Ray Document": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents",
+      "body": {
+        "patient_id": "60d5f9e5f1b2c72b8c8e4f1b",
+        "uploaded_by": "radiologist_789",
+        "file_name": "chest-xray.jpg",
+        "file_url": "https://res.cloudinary.com/dt9l4yn08/image/upload/chest-xray.jpg",
+        "cloudinary_public_id": "medical_documents/xray_456",
+        "file_size": 567890,
+        "file_type": "image/jpeg",
+        "document_type": "radiology",
+        "description": "Chest X-ray - PA view",
+        "tags": ["xray", "chest", "lungs", "cardiology"]
+      }
+    },
+    "4. Create Prescription Document": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents",
+      "body": {
+        "patient_id": "60d5f9e5f1b2c72b8c8e4f1c",
+        "uploaded_by": "dr_patel_321",
+        "file_name": "prescription-jan-2026.pdf",
+        "file_url": "https://example.com/prescriptions/jan-2026.pdf",
+        "cloudinary_public_id": "medical_docs/prescription_789",
+        "file_size": 98765,
+        "file_type": "application/pdf",
+        "document_type": "prescription",
+        "description": "Monthly prescription for hypertension medication",
+        "tags": ["prescription", "hypertension", "medication"]
+      }
+    },
+    "5. Update Document": {
+      "method": "PUT",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE",
+      "body": {
+        "description": "Updated description with additional notes",
+        "tags": ["blood", "cholesterol", "diabetes", "urgent"],
+        "document_type": "lab_report",
+        "updated_by": "doctor_123",
+        "ip_address": "192.168.1.100"
+      }
+    },
+    "6. Share Document with User": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE/share",
+      "body": {
+        "shared_with_user_id": "specialist_doctor_999",
+        "shared_by": "doctor_123",
+        "permission_level": "view",
+        "ip_address": "192.168.1.100"
+      },
+      "notes": "permission_level can be: view, download, edit"
+    },
+    "7. Create New Version of Document": {
+      "method": "POST",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE/version",
+      "body": {
+        "file_name": "blood-test-report-updated.pdf",
+        "file_url": "https://res.cloudinary.com/dt9l4yn08/image/upload/new-version.pdf",
+        "cloudinary_public_id": "medical_documents/sample_v2",
+        "file_size": 256789,
+        "version_notes": "Updated report with corrected values",
+        "uploaded_by": "doctor_123"
+      }
+    },
+    "8. Get All Documents (Query Parameters)": {
+      "method": "GET",
+      "url": "http://localhost:5001/api/medical-documents",
+      "query_params": {
+        "page": 1,
+        "limit": 20,
+        "patient_id": "60d5f9e5f1b2c72b8c8e4f1a",
+        "document_type": "lab_report",
+        "category": "laboratory",
+        "is_active": true,
+        "search": "blood",
+        "sort_by": "uploaded_at",
+        "sort_order": "desc"
+      },
+      "example_url": "http://localhost:5001/api/medical-documents?patient_id=60d5f9e5f1b2c72b8c8e4f1a&document_type=lab_report&limit=10"
+    },
+    "9. Get Documents by Patient": {
+      "method": "GET",
+      "url": "http://localhost:5001/api/medical-documents/patient/60d5f9e5f1b2c72b8c8e4f1a",
+      "query_params": {
+        "document_type": "lab_report",
+        "category": "laboratory",
+        "limit": 50
+      }
+    },
+    "10. Get Single Document": {
+      "method": "GET",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE",
+      "query_params": {
+        "user_id": "doctor_123",
+        "ip_address": "192.168.1.100"
+      }
+    },
+    "11. Delete Document": {
+      "method": "DELETE",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE",
+      "body": {
+        "deleted_by": "doctor_123",
+        "ip_address": "192.168.1.100",
+        "soft_delete": true
+      }
+    },
+    "12. Revoke Document Sharing": {
+      "method": "DELETE",
+      "url": "http://localhost:5001/api/medical-documents/DOCUMENT_ID_HERE/share/specialist_doctor_999",
+      "body": {
+        "revoked_by": "doctor_123",
+        "ip_address": "192.168.1.100"
+      }
+    },
+    "NOTE_FOR_FILE_UPLOAD": {
+      "message": "For file upload to Cloudinary, you CANNOT use JSON",
+      "endpoint": "POST http://localhost:5001/api/medical-documents/upload",
+      "method": "form-data (multipart/form-data)",
+      "required_fields": {
+        "file": "FILE TYPE - Select your file (PDF, image, Word, etc.)",
+        "patient_id": "TEXT - Example: 60d5f9e5f1b2c72b8c8e4f1a",
+        "uploaded_by": "TEXT - Example: doctor_123",
+        "document_type": "TEXT - Example: lab_report",
+        "description": "TEXT (Optional) - Example: Blood test results",
+        "tags": "TEXT (Optional) - Example: blood,cholesterol"
+      },
+      "postman_steps": [
+        "1. Select POST method",
+        "2. URL: http://localhost:5001/api/medical-documents/upload",
+        "3. Go to Body tab",
+        "4. Select 'form-data' (NOT raw JSON)",
+        "5. Add key 'file' and change dropdown from 'Text' to 'File'",
+        "6. Click 'Select Files' and choose your file",
+        "7. Add other fields as Text type",
+        "8. Click Send"
+      ]
+    }
+  },
+  "sample_patient_ids": [
+    "60d5f9e5f1b2c72b8c8e4f1a",
+    "60d5f9e5f1b2c72b8c8e4f1b",
+    "60d5f9e5f1b2c72b8c8e4f1c",
+    "60d5f9e5f1b2c72b8c8e4f1d"
+  ],
+  "sample_doctor_ids": [
+    "doctor_123",
+    "dr_smith_456",
+    "dr_patel_321",
+    "radiologist_789",
+    "specialist_doctor_999"
+  ],
+  "document_types": [
+    "lab_report",
+    "radiology",
+    "prescription",
+    "discharge_summary",
+    "consultation_note",
+    "insurance_document",
+    "vaccination_record",
+    "surgical_report",
+    "pathology_report",
+    "ecg",
+    "ultrasound",
+    "medical_history",
+    "consent_form",
+    "referral_letter",
+    "progress_note",
+    "other"
+  ],
+  "categories": [
+    "laboratory",
+    "imaging",
+    "medication",
+    "summary",
+    "consultation",
+    "administrative",
+    "immunization",
+    "surgical",
+    "diagnostic",
+    "history",
+    "general"
+  ],
+  "permission_levels": [
+    "view",
+    "download",
+    "edit"
+  ]
+}

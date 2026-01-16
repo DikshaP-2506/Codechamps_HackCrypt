@@ -1,0 +1,133 @@
+### MENTAL HEALTH API - POSTMAN REQUESTS
+
+# Patient Features
+POST http://localhost:5000/api/mental-health/quick-log
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "mood_rating": 8,
+  "stress_level": "Low",
+  "anxiety_level": "Low",
+  "notes": "Feeling great today!"
+}
+
+###
+
+POST http://localhost:5000/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_score": 7,
+  "mood_rating": 8,
+  "stress_level": "medium",
+  "anxiety_level": "medium",
+  "sleep_hours": 7.5,
+  "sleep_quality": 8,
+  "gad7_score": 5,
+  "phq9_score": 6,
+  "notes": "Patient feeling stable"
+}
+
+###
+
+GET http://localhost:5000/api/mental-health/recent/9897
+
+###
+
+# Doctor Features
+GET http://localhost:5000/api/mental-health/patient/9897?startDate=2026-01-01&limit=50
+
+###
+
+GET http://localhost:5000/api/mental-health/analytics/9897?period=30
+
+###
+
+GET http://localhost:5000/api/mental-health/65f00000000000000000901
+
+###
+
+PUT http://localhost:5000/api/mental-health/65f00000000000000000901
+Content-Type: application/json
+
+{
+  "notes": "Updated: Patient showing improvement",
+  "gad7_score": 4,
+  "phq9_score": 5
+}
+
+###
+
+DELETE http://localhost:5000/api/mental-health/65f00000000000000000901
+
+###
+
+# Test Scenarios
+
+# Scenario 1: Happy Patient
+POST http://localhost:5000/api/mental-health/quick-log
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "mood_rating": 9,
+  "stress_level": "Low",
+  "anxiety_level": "Low",
+  "notes": "Excellent day! Everything went well."
+}
+
+###
+
+# Scenario 2: Patient with Moderate Anxiety
+POST http://localhost:5000/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 5,
+  "stress_level": "High",
+  "anxiety_level": "High",
+  "sleep_hours": 5,
+  "sleep_quality": 4,
+  "gad7_score": 12,
+  "phq9_score": 8,
+  "notes": "Patient reports increased worry and difficulty sleeping"
+}
+
+###
+
+# Scenario 3: Patient with Depression Symptoms
+POST http://localhost:5000/api/mental-health
+Content-Type: application/json
+
+{
+  "patient_id": "9897",
+  "recorded_by": "9097",
+  "mood_rating": 3,
+  "stress_level": "Medium",
+  "anxiety_level": "Medium",
+  "sleep_hours": 10,
+  "sleep_quality": 3,
+  "gad7_score": 7,
+  "phq9_score": 16,
+  "notes": "Patient showing signs of moderately severe depression"
+}
+
+###
+
+# Get Multiple Patient Logs with Date Range
+GET http://localhost:5000/api/mental-health/patient/9897?startDate=2026-01-01&endDate=2026-01-31&limit=100
+
+###
+
+# Health Check
+GET http://localhost:5000/health
+
+###
+
+# Root - View All Endpoints
+GET http://localhost:5000/

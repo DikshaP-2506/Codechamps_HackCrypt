@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
           source: '/api/medical-documents/:path*',
           destination: 'http://localhost:5000/api/medical-documents/:path*',
         },
+        // Proxy community to backend
+        {
+          source: '/api/community/:path*',
+          destination: 'http://localhost:5000/api/community/:path*',
+        },
       ],
     };
   },

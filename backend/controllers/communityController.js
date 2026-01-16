@@ -50,11 +50,8 @@ exports.listCommunityGroups = async (req, res) => {
       memberGroupIds = await CommunityMember.find({ user_id: userId }).distinct('group_id');
     }
 
-    const filter = userId
-      ? { $or: [{ visibility: 'public' }, { _id: { $in: memberGroupIds } }] }
-      : { visibility: 'public' };
-
-    const groups = await CommunityGroup.find(filter).sort({ created_at: -1 });
+    // Show all groups to all patients
+    const groups = await CommunityGroup.find({}).sort({ created_at: -1 });
     const groupIds = groups.map((g) => g._id);
 
     const counts = await CommunityMember.aggregate([

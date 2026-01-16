@@ -1,0 +1,20 @@
+{
+  "name": "ai-backend",
+  "version": "1.0.0",
+  "description": "AI Mental Health Chatbot with LangChain + Groq",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["langchain", "groq", "chatbot", "mental-health"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/groq": "^0.0.14",
+    "langchain": "^0.1.30",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  }
+}

@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Home,
+  Activity,
+  Pill,
+  Bell,
   Users,
   Calendar,
-  Pill,
   Folder,
   MessageCircle,
   BookOpen,
@@ -23,43 +25,24 @@ import {
   ClipboardList,
   Download,
   Printer,
-  Edit3,
-  Activity,
-  Thermometer,
-  Droplets,
-  Heart,
-  TrendingUp,
-  Shield,
-  Upload,
-  Mic,
-  LayoutGrid,
-  List,
-  Clock,
-  Trash,
-  CheckCircle,
-  Mail,
-  Phone,
-  Eye,
-  Copy,
-  Trash2,
-  CheckCircle2,
-  XCircle,
-  QrCode,
-} from "lucide-react";
-import { DoctorTopBar } from "@/components/DoctorTopBar";
-
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase())
-    .join("")
-    .slice(0, 2);
-
-  return (
-    <div
-      className="flex items-center justify-center rounded-full bg-purple-700 font-semibold text-white"
-      style={{ width: size, height: size }}
+    Edit3,
+    Activity,
+    Thermometer,
+    Droplets,
+    Heart,
+    TrendingUp,
+    Shield,
+    Upload,
+    Mic,
+    LayoutGrid,
+    List,
+    Clock,
+    Trash,
+    CheckCircle,
+    Mail,
+    Phone,
+  } from "lucide-react";
+  import { DoctorTopBar } from "@/components/DoctorTopBar";
     >
       {initials}
     </div>

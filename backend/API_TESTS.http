@@ -1,0 +1,528 @@
+### Health Check
+GET http://localhost:5001/health
+
+### Get All Patients
+GET http://localhost:5001/api/patients
+
+### Get Patients with Pagination and Search
+GET http://localhost:5001/api/patients?page=1&limit=10&search=john
+
+### Get Active Patients Only
+GET http://localhost:5001/api/patients?is_active=true
+
+### Create New Patient Profile
+POST http://localhost:5001/api/patients
+Content-Type: application/json
+
+{
+  "clerk_user_id": "user_2abc123xyz",
+  "name": "Rohit Patil",
+  "date_of_birth": "2000-04-10",
+  "gender": "Male",
+  "blood_group": "O+",
+  "emergency_contact_name": "Suresh Patil",
+  "emergency_contact_phone": "9123456789",
+  "address": "Pune, Maharashtra",
+  "allergies": [],
+  "chronic_conditions": [],
+  "past_surgeries": [],
+  "family_history": "Heart disease",
+  "role": "patient",
+  "is_active": true
+}
+
+### Get Patient by ID (replace {id} with actual patient ID)
+GET http://localhost:5000/api/patients/{id}
+
+### Update Patient Profile (replace {id} with actual patient ID)
+PUT http://localhost:5000/api/patients/{id}
+Content-Type: application/json
+
+{
+  "name": "Rohit Patil Updated",
+  "date_of_birth": "2000-04-10",
+  "gender": "Male",
+  "blood_group": "O+",
+  "emergency_contact_name": "Suresh Patil",
+  "emergency_contact_phone": "9123456789",
+  "address": "Updated Address, Pune, Maharashtra",
+  "role": "patient",
+  "is_active": true
+}
+
+### Auto-Save Patient Profile (replace {id} with actual patient ID)
+PATCH http://localhost:5000/api/patients/{id}/autosave
+Content-Type: application/json
+
+{
+  "blood_group": "A+",
+  "address": "Updated address information"
+}
+
+### Get Patient Statistics
+GET http://localhost:5000/api/patients/stats/overview
+
+### Add Allergy to Patient (replace {id} with actual patient ID)
+POST http://localhost:5000/api/patients/{id}/allergies
+Content-Type: application/json
+
+{
+  "allergy": "Shellfish - Severe allergic reaction with hives and difficulty breathing"
+}
+
+### Add Chronic Condition (replace {id} with actual patient ID)
+POST http://localhost:5000/api/patients/{id}/chronic-conditions
+Content-Type: application/json
+
+{
+  "condition": "Asthma - Diagnosed 2010-03-15, Status: Active, Treatment: Inhaler (Salbutamol) as needed"
+}
+
+### Add Surgery Record (replace {id} with actual patient ID)
+POST http://localhost:5000/api/patients/{id}/surgeries
+Content-Type: application/json
+
+{
+  "surgery": "Knee Arthroscopy - Performed 2023-06-10 at City Hospital by Dr. Sharma"
+}
+UT http://localhost:5000/api/patients/{id}/family-history
+Content-Type: application/json
+
+{
+  "family_history": "Father has diabetes, Mother has hypertension. Grandfather had heart disease.
+{
+  "history": "Sister - Thyroid disorder, Age of Onset: 28, Status: Living, Currently on medication"
+}
+
+### Delete Patient (replace {id} with actual patient ID)
+DELETE http://localhost:5000/api/patients/{id}
+
+### Deactivate Patient (Soft Delete - replace {id} with actual patient ID)
+PATCH http://localhost:5000/api/patients/{id}/autosave
+Content-Type: application/json
+
+{
+  "is_active": false
+}
+
+###
+# ========================================
+# PHYSICAL VITALS API TESTS
+# ========================================
+
+### Get All Physical Vitals
+GET http://localhost:5001/api/physical-vitals
+
+### Get Physical Vitals with Pagination
+GET http://localhost:5001/api/physical-vitals?page=1&limit=10
+
+### Get Vitals for Specific Patient (replace {patientId} with actual patient ID)
+GET http://localhost:5001/api/physical-vitals/patient/{patientId}
+
+### Get Latest Vitals for Patient
+GET http://localhost:5001/api/physical-vitals/patient/{patientId}/latest
+
+### Get Vitals Statistics for Patient (last 30 days)
+GET http://localhost:5001/api/physical-vitals/patient/{patientId}/stats?days=30
+
+### Create New Physical Vital Record
+POST http://localhost:5001/api/physical-vitals
+Content-Type: application/json
+
+{
+  "patient_id": 6543,
+  "recorded_at": "2024-01-20T10:30:00Z",
+  "systolic_bp": 120,
+  "diastolic_bp": 80,
+  "heart_rate": 75,
+  "blood_sugar": 95,
+  "respiratory_rate": 16,
+  "temperature": 98.6,
+  "spo2": 98,
+  "weight": 70.5,
+  "hb": 14.2,
+  "bmi": 23.5,
+  "measurement_method": "clinical_device",
+  "notes": "Regular checkup - all vitals normal"
+}
+
+### Create Vital with Manual Entry
+POST http://localhost:5001/api/physical-vitals
+Content-Type: application/json
+
+{
+  "patient_id": 6543,
+  "systolic_bp": 130,
+  "diastolic_bp": 85,
+  "heart_rate": 82,
+  "temperature": 99.2,
+  "spo2": 97,
+  "measurement_method": "manual_entry",
+  "notes": "Patient reported feeling slightly warm"
+}
+
+### Get Specific Vital Record (replace {id} with actual vital ID)
+GET http://localhost:5001/api/physical-vitals/{id}
+
+### Update Vital Record (replace {id} with actual vital ID)
+PUT http://localhost:5001/api/physical-vitals/{id}
+Content-Type: application/json
+
+{
+  "systolic_bp": 125,
+  "diastolic_bp": 82,
+  "notes": "Updated reading after rechecking"
+}
+
+### Delete Vital Record (replace {id} with actual vital ID)
+DELETE http://localhost:5001/api/physical-vitals/{id}
+
+###
+# ========================================
+# PRESCRIPTIONS API TESTS
+# ========================================
+
+### Get All Prescriptions
+GET http://localhost:5001/api/prescriptions
+
+### Get Prescriptions with Pagination and Filters
+GET http://localhost:5001/api/prescriptions?page=1&limit=10&is_active=true
+
+### Get Prescriptions for Specific Patient (replace {patientId} with actual patient ID)
+GET http://localhost:5001/api/prescriptions/patient/{patientId}
+
+### Get Active Prescriptions for Patient
+GET http://localhost:5001/api/prescriptions/patient/{patientId}/active
+
+### Get Prescriptions by Doctor (replace {doctorId} with actual doctor ID)
+GET http://localhost:5001/api/prescriptions/doctor/{doctorId}
+
+### Get Prescription Statistics
+GET http://localhost:5001/api/prescriptions/stats/overview
+
+### Get Prescription Statistics for Specific Patient
+GET http://localhost:5001/api/prescriptions/stats/overview?patient_id=9897
+
+### Create New Prescription
+POST http://localhost:5001/api/prescriptions
+Content-Type: application/json
+
+{
+  "patient_id": 9897,
+  "doctor_id": 5598,
+  "medication_name": "Metformin",
+  "dosage": "500mg",
+  "frequency": "Twice a day",
+  "duration_days": 30,
+  "instructions": "Take after meals with water",
+  "qr_code_url": "https://cdn.app/rx/qr123.png",
+  "is_active": true
+}
+
+### Create Prescription with Minimal Fields
+POST http://localhost:5001/api/prescriptions
+Content-Type: application/json
+
+{
+  "patient_id": 9897,
+  "doctor_id": 5598,
+  "medication_name": "Paracetamol",
+  "dosage": "650mg",
+  "frequency": "Three times a day",
+  "duration_days": 5,
+  "instructions": "Take after meals"
+}
+
+### Get Specific Prescription (replace {id} with actual prescription ID)
+GET http://localhost:5001/api/prescriptions/{id}
+
+### Update Prescription (replace {id} with actual prescription ID)
+PUT http://localhost:5001/api/prescriptions/{id}
+Content-Type: application/json
+
+{
+  "dosage": "1000mg",
+  "frequency": "Three times a day",
+  "instructions": "Take with food. Avoid alcohol."
+}
+
+### Mark Prescription as Completed (replace {id} with actual prescription ID)
+PATCH http://localhost:5001/api/prescriptions/{id}/complete
+
+### Delete Prescription (replace {id} with actual prescription ID)
+DELETE http://localhost:5001/api/prescriptions/{id}
+
+###
+# ========================================
+# APPOINTMENTS API TESTS
+# ========================================
+
+### Get All Appointments
+GET http://localhost:5001/api/appointments
+
+### Get Appointments with Pagination and Filters
+GET http://localhost:5001/api/appointments?page=1&limit=10&status=confirmed
+
+### Get Appointments by Date Range
+GET http://localhost:5001/api/appointments?start_date=2026-01-20&end_date=2026-01-25
+
+### Get Appointments for Specific Patient (replace {patientId} with actual patient ID)
+GET http://localhost:5001/api/appointments/patient/{patientId}
+
+### Get Upcoming Appointments for Patient
+GET http://localhost:5001/api/appointments/patient/890?upcoming=true
+
+### Get Appointments by Doctor (replace {doctorId} with actual doctor ID)
+GET http://localhost:5001/api/appointments/doctor/{doctorId}
+
+### Get Doctor's Appointments for Specific Date
+GET http://localhost:5001/api/appointments/doctor/780?date=2026-01-20
+
+### Check Doctor Availability
+GET http://localhost:5001/api/appointments/availability/780?date=2026-01-20
+
+### Get Appointment Statistics
+GET http://localhost:5001/api/appointments/stats/overview
+
+### Get Appointment Statistics for Specific Patient
+GET http://localhost:5001/api/appointments/stats/overview?patient_id=890
+
+### Get Pending Reminders
+GET http://localhost:5001/api/appointments/reminders/pending
+
+### Create New Appointment
+POST http://localhost:5001/api/appointments
+Content-Type: application/json
+
+{
+  "patient_id": 890,
+  "doctor_id": 780,
+  "appointment_type": "in_person",
+  "status": "confirmed",
+  "start_time": "2026-01-20T10:00:00.000Z",
+  "duration_minutes": 30,
+  "notes": "Routine checkup"
+}
+
+### Create Video Call Appointment
+POST http://localhost:5001/api/appointments
+Content-Type: application/json
+
+{
+  "patient_id": 890,
+  "doctor_id": 780,
+  "appointment_type": "video_call",
+  "status": "scheduled",
+  "start_time": "2026-01-22T14:30:00.000Z",
+  "duration_minutes": 45,
+  "notes": "Follow-up consultation via video"
+}
+
+### Create Recurring Appointment
+POST http://localhost:5001/api/appointments
+Content-Type: application/json
+
+{
+  "patient_id": 890,
+  "doctor_id": 780,
+  "appointment_type": "therapy_session",
+  "status": "scheduled",
+  "start_time": "2026-01-25T09:00:00.000Z",
+  "duration_minutes": 60,
+  "is_recurring": true,
+  "recurrence_pattern": "weekly",
+  "recurrence_end_date": "2026-03-25T09:00:00.000Z",
+  "notes": "Weekly therapy session"
+}
+
+### Get Specific Appointment (replace {id} with actual appointment ID)
+GET http://localhost:5001/api/appointments/{id}
+
+### Update Appointment (replace {id} with actual appointment ID)
+PUT http://localhost:5001/api/appointments/{id}
+Content-Type: application/json
+
+{
+  "start_time": "2026-01-20T11:00:00.000Z",
+  "duration_minutes": 45,
+  "notes": "Rescheduled - Extended duration"
+}
+
+### Confirm Appointment (replace {id} with actual appointment ID)
+PATCH http://localhost:5001/api/appointments/{id}/confirm
+
+### Cancel Appointment (replace {id} with actual appointment ID)
+PATCH http://localhost:5001/api/appointments/{id}/cancel
+
+### Complete Appointment (replace {id} with actual appointment ID)
+PATCH http://localhost:5001/api/appointments/{id}/complete
+
+### Mark Reminder as Sent (replace {id} with actual appointment ID)
+PATCH http://localhost:5001/api/appointments/{id}/reminder
+Content-Type: application/json
+
+{
+  "reminder_type": "24h"
+}
+
+### Delete Appointment (replace {id} with actual appointment ID)
+DELETE http://localhost:5001/api/appointments/{id}
+
+########################################
+# NOTIFICATION API ENDPOINTS
+########################################
+
+### Get All Notifications (with pagination and filters)
+GET http://localhost:5001/api/notifications?page=1&limit=20
+
+### Get Notifications with Filters
+GET http://localhost:5001/api/notifications?recipient_id=890&is_read=false&notification_type=appointment_reminder
+
+### Get Notifications by Recipient ID
+GET http://localhost:5001/api/notifications/recipient/890
+
+### Get Notifications by Recipient ID (unread only)
+GET http://localhost:5001/api/notifications/recipient/890?is_read=false
+
+### Get Notifications by Patient ID
+GET http://localhost:5001/api/notifications/patient/890
+
+### Get Notifications by Patient ID (with type filter)
+GET http://localhost:5001/api/notifications/patient/890?notification_type=appointment_reminder
+
+### Get Single Notification by ID (replace {id} with actual notification ID)
+GET http://localhost:5001/api/notifications/{id}
+
+### Create New Notification (Appointment Reminder)
+POST http://localhost:5001/api/notifications
+Content-Type: application/json
+
+{
+  "recipient_id": "890",
+  "patient_id": "890",
+  "notification_type": "appointment_reminder",
+  "title": "Appointment Reminder - 24 Hours",
+  "body": "You have an appointment with Dr. Smith tomorrow at 10:00 AM. Please arrive 15 minutes early.",
+  "data": {
+    "appointment_id": "6543f1234567890abcdef123",
+    "doctor_name": "Dr. Smith",
+    "appointment_time": "2024-01-20T10:00:00Z",
+    "reminder_type": "24h"
+  }
+}
+
+### Create New Notification (Prescription Refill)
+POST http://localhost:5001/api/notifications
+Content-Type: application/json
+
+{
+  "recipient_id": "890",
+  "patient_id": "890",
+  "notification_type": "prescription_refill",
+  "title": "Prescription Refill Reminder",
+  "body": "Your prescription for Metformin is expiring in 3 days. Please contact your doctor for a refill.",
+  "data": {
+    "prescription_id": "6543f1234567890abcdef456",
+    "medication_name": "Metformin",
+    "expiry_date": "2024-01-18T00:00:00Z"
+  }
+}
+
+### Create New Notification (Health Alert)
+POST http://localhost:5001/api/notifications
+Content-Type: application/json
+
+{
+  "recipient_id": "890",
+  "patient_id": "890",
+  "notification_type": "health_alert",
+  "title": "High Blood Pressure Alert",
+  "body": "Your recent blood pressure reading (150/95) is higher than normal. Please consult your doctor.",
+  "data": {
+    "vital_id": "6543f1234567890abcdef789",
+    "systolic": 150,
+    "diastolic": 95,
+    "recorded_at": "2024-01-15T14:30:00Z"
+  }
+}
+
+### Create New Notification (Lab Result)
+POST http://localhost:5001/api/notifications
+Content-Type: application/json
+
+{
+  "recipient_id": "890",
+  "patient_id": "890",
+  "notification_type": "lab_result",
+  "title": "Lab Results Available",
+  "body": "Your blood test results are now available. Please login to view them.",
+  "data": {
+    "test_type": "Complete Blood Count",
+    "result_url": "/lab-results/6543f1234567890abcdef999"
+  }
+}
+
+### Update Notification (replace {id} with actual notification ID)
+PUT http://localhost:5001/api/notifications/{id}
+Content-Type: application/json
+
+{
+  "recipient_id": "890",
+  "patient_id": "890",
+  "notification_type": "appointment_reminder",
+  "title": "Updated: Appointment Reminder",
+  "body": "Your appointment has been rescheduled to 2:00 PM tomorrow.",
+  "data": {
+    "appointment_id": "6543f1234567890abcdef123",
+    "new_time": "2024-01-20T14:00:00Z"
+  }
+}
+
+### Mark Notification as Read (replace {id} with actual notification ID)
+PATCH http://localhost:5001/api/notifications/{id}/read
+
+### Mark All Notifications as Read for Recipient (replace {recipientId} with actual recipient ID)
+PATCH http://localhost:5001/api/notifications/recipient/890/read-all
+
+### Get Unread Notification Count for Recipient (replace {recipientId} with actual recipient ID)
+GET http://localhost:5001/api/notifications/recipient/890/unread-count
+
+### Clear All Read Notifications for Recipient (replace {recipientId} with actual recipient ID)
+DELETE http://localhost:5001/api/notifications/recipient/890/clear-read
+
+### Get Notification Statistics
+GET http://localhost:5001/api/notifications/stats/overview
+
+### Send Bulk Notifications
+POST http://localhost:5001/api/notifications/bulk
+Content-Type: application/json
+
+{
+  "notifications": [
+    {
+      "recipient_id": "890",
+      "patient_id": "890",
+      "notification_type": "appointment_reminder",
+      "title": "Appointment Reminder - 1 Hour",
+      "body": "Your appointment starts in 1 hour at 10:00 AM.",
+      "data": {
+        "appointment_id": "6543f1234567890abcdef123",
+        "reminder_type": "1h"
+      }
+    },
+    {
+      "recipient_id": "6543",
+      "patient_id": "6543",
+      "notification_type": "appointment_reminder",
+      "title": "Appointment Reminder - 1 Hour",
+      "body": "Your appointment starts in 1 hour at 11:00 AM.",
+      "data": {
+        "appointment_id": "6543f1234567890abcdef456",
+        "reminder_type": "1h"
+      }
+    }
+  ]
+}
+
+### Delete Notification (replace {id} with actual notification ID)
+DELETE http://localhost:5001/api/notifications/{id}

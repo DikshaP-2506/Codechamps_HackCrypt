@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
@@ -29,7 +29,18 @@ import {
 } from "lucide-react";
 
 // Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className="rounded-full border border-gray-200 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -221,7 +232,7 @@ function AppointmentCard({
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userName, userImage }: { active: string; userName: string; userImage?: string }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
     { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
@@ -240,9 +251,9 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-emerald-700 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Sarah Johnson" size={48} />
+          <Avatar name={userName} imageUrl={userImage} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">Sarah Johnson</p>
+            <p className="font-semibold text-white">{userName}</p>
             <p className="text-xs text-emerald-200">Patient</p>
           </div>
         </div>
@@ -285,9 +296,11 @@ function Sidebar({ active }: { active: string }) {
 // Main Patient Dashboard Component
 export default function PatientDashboard() {
   const { signOut } = useAuth();
+  const { user } = useUser();
   const [notificationCount] = useState(5);
   const [profileOpen, setProfileOpen] = useState(false);
-  const patientName = "Sarah Johnson";
+  const patientName = user?.fullName || "Patient";
+  const patientImage = user?.imageUrl;
 
   const handleLogout = () => {
     signOut({ redirectUrl: "/sign-in" });
@@ -433,7 +446,7 @@ export default function PatientDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="dashboard" />
+      <Sidebar active="dashboard" userName={patientName} userImage={patientImage} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
@@ -473,7 +486,7 @@ export default function PatientDashboard() {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center rounded-full border-2 border-emerald-200 p-0 transition hover:border-emerald-300"
                 >
-                  <Avatar name={patientName} size={40} />
+                  <Avatar name={patientName} imageUrl={patientImage} size={40} />
                 </button>
 
                 {profileOpen && (

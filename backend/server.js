@@ -98,6 +98,9 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
 
+  // Ensure we always send JSON response
+  res.setHeader('Content-Type', 'application/json');
+
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors).map(e => e.message);

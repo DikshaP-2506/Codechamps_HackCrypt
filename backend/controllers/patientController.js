@@ -50,7 +50,13 @@ exports.getAllPatients = async (req, res, next) => {
 // @access  Public
 exports.getPatientById = async (req, res, next) => {
   try {
-    const patient = await PatientProfile.findById(req.params.id).select('-__v');
+    // Try to find by MongoDB _id first, then by clerk_user_id
+    let patient = await PatientProfile.findById(req.params.id).select('-__v').catch(() => null);
+    
+    if (!patient) {
+      // If not found by _id, try clerk_user_id
+      patient = await PatientProfile.findOne({ clerk_user_id: req.params.id }).select('-__v');
+    }
 
     if (!patient) {
       return res.status(404).json({

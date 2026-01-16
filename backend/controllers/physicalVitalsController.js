@@ -204,7 +204,7 @@ exports.getVitalsStats = async (req, res, next) => {
     const stats = await PhysicalVitals.aggregate([
       {
         $match: {
-          patient_id: require('mongoose').Types.ObjectId(req.params.patientId),
+          patient_id: req.params.patientId,
           recorded_at: { $gte: startDate }
         }
       },

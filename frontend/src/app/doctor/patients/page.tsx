@@ -37,6 +37,7 @@ import {
   Droplet,
   Cake,
   HelpCircle,
+  FileHeart,
 } from "lucide-react";
 
 // Avatar Component

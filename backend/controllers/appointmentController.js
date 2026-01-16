@@ -145,8 +145,8 @@ exports.getAppointmentsByDoctorId = async (req, res, next) => {
 // @access  Public
 exports.getAppointmentById = async (req, res, next) => {
   try {
-    const appointment = await Appointment.findById(req.params.id)
-      .select('-__v');
+    // Try to find by MongoDB _id, handle invalid ObjectIds gracefully
+    const appointment = await Appointment.findById(req.params.id).select('-__v').catch(() => null);
 
     if (!appointment) {
       return res.status(404).json({

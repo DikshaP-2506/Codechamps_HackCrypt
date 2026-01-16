@@ -1,36 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
   Activity,
   Pill,
-  Bell,
   Calendar,
   Folder,
   MessageCircle,
   Users,
-  User,
   Settings,
   LogOut,
-  Search,
   BookOpen,
   Check,
   Clock,
   X,
   AlertCircle,
   Camera,
-  Plus,
   ChevronDown,
   ChevronUp,
-  BarChart3,
   Flame,
   ScanLine,
 } from "lucide-react";
+import { PatientTopBar } from "@/components/PatientTopBar";
 
 // Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className="rounded-full border border-gray-200 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -49,7 +57,7 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userName, userImage }: { active: string; userName: string; userImage?: string }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
     { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
@@ -59,8 +67,6 @@ function Sidebar({ active }: { active: string }) {
     { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/patient/wellness" },
     { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/patient/chat" },
     { id: "community", label: "Community", icon: Users, href: "/patient/community" },
-    { id: "profile", label: "My Profile", icon: User, href: "/patient/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/patient/settings" },
   ];
 
   return (
@@ -68,9 +74,9 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-emerald-700 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Sarah Johnson" size={48} />
+          <Avatar name={userName} imageUrl={userImage} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">Sarah Johnson</p>
+            <p className="font-semibold text-white">{userName}</p>
             <p className="text-xs text-emerald-200">Patient</p>
           </div>
         </div>
@@ -521,202 +527,20 @@ function ReminderSettingsModal({
   );
 }
 
-// Add Medication Modal
-function AddMedicationModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const [entryMethod, setEntryMethod] = useState<"manual" | "barcode">("manual");
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">Add New Medication</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Entry Method Toggle */}
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setEntryMethod("manual")}
-            className={`flex-1 rounded-lg border px-4 py-3 font-medium transition ${
-              entryMethod === "manual"
-                ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            Manual Entry
-          </button>
-          <button
-            onClick={() => setEntryMethod("barcode")}
-            className={`flex-1 rounded-lg border px-4 py-3 font-medium transition ${
-              entryMethod === "barcode"
-                ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            Scan Barcode
-          </button>
-        </div>
-
-        {entryMethod === "barcode" ? (
-          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-            <Camera className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-            <p className="text-gray-600">Scan medication barcode</p>
-            <button className="mt-4 rounded-lg bg-emerald-600 px-6 py-2 font-semibold text-white hover:bg-emerald-700">
-              Start Scanning
-            </button>
-          </div>
-        ) : (
-          <form className="space-y-4">
-            {/* Medication Name */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Medication Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., Metformin"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-
-            {/* Dosage */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Dosage
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., 500"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Unit
-                </label>
-                <select className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                  <option>mg</option>
-                  <option>mcg</option>
-                  <option>g</option>
-                  <option>ml</option>
-                  <option>IU</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Frequency */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Frequency
-              </label>
-              <select className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                <option>Once daily</option>
-                <option>Twice daily</option>
-                <option>Three times daily</option>
-                <option>Every 12 hours</option>
-                <option>Every 8 hours</option>
-                <option>As needed</option>
-              </select>
-            </div>
-
-            {/* Duration */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  End Date (Optional)
-                </label>
-                <input
-                  type="date"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-
-            {/* Reminder Times */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Reminder Times
-              </label>
-              <div className="space-y-2">
-                <input
-                  type="time"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-              <button
-                type="button"
-                className="mt-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
-              >
-                + Add another reminder
-              </button>
-            </div>
-
-            {/* Instructions */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Instructions
-              </label>
-              <textarea
-                rows={3}
-                placeholder="e.g., Take with food"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
-              >
-                Add Medication
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Main Medications Page Component
 export default function PatientMedications() {
+  const { signOut } = useAuth();
+  const { user } = useUser();
   const [notificationCount] = useState(5);
   const [filterTab, setFilterTab] = useState<"today" | "week" | "all">("today");
   const [showReminderSettings, setShowReminderSettings] = useState(false);
-  const [showAddMedication, setShowAddMedication] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<{ name: string } | undefined>();
-  const patientName = "Sarah Johnson";
+  const patientName = user?.fullName || "Patient";
+  const patientImage = user?.imageUrl;
+
+  const handleLogout = async () => {
+    await signOut({ redirectUrl: "/sign-in" });
+  };
 
   // Mock medications data
   const allMedications = [
@@ -798,47 +622,17 @@ export default function PatientMedications() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="medications" />
+      <Sidebar active="medications" userName={patientName} userImage={patientImage} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Search Bar */}
-            <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 w-96">
-              <Search className="h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search medications..."
-                className="flex-1 border-none bg-transparent text-sm outline-none"
-              />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Bell className="h-6 w-6" />
-                {notificationCount > 0 && (
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {notificationCount}
-                  </div>
-                )}
-              </button>
-
-              {/* Settings */}
-              <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Settings className="h-6 w-6" />
-              </button>
-
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-emerald-200">
-                <Avatar name={patientName} size={40} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <PatientTopBar
+          userName={patientName}
+          userImage={patientImage}
+          notificationCount={notificationCount}
+          onLogout={handleLogout}
+          searchPlaceholder="Search medications..."
+        />
 
         {/* Main Content */}
         <main className="p-8">
@@ -853,13 +647,6 @@ export default function PatientMedications() {
                 Medication tracking and reminders
               </p>
             </div>
-            <button
-              onClick={() => setShowAddMedication(true)}
-              className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-emerald-700"
-            >
-              <Plus className="h-5 w-5" />
-              Add Medication
-            </button>
           </div>
 
           {/* Today's Stats */}
@@ -957,10 +744,6 @@ export default function PatientMedications() {
         isOpen={showReminderSettings}
         onClose={() => setShowReminderSettings(false)}
         medication={selectedMedication}
-      />
-      <AddMedicationModal
-        isOpen={showAddMedication}
-        onClose={() => setShowAddMedication(false)}
       />
     </div>
   );

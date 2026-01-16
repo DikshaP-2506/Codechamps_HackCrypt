@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Home,
   Activity,
   Pill,
-  Bell,
   Calendar,
   Folder,
   MessageCircle,
@@ -14,7 +14,6 @@ import {
   User,
   Settings,
   LogOut,
-  Search,
   BookOpen,
   Heart,
   TrendingUp,
@@ -33,10 +32,25 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
+  Plus,
+  X,
+  ArrowRight,
 } from "lucide-react";
+import { PatientTopBar } from "@/components/PatientTopBar";
 
 // Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={name}
+        className="rounded-full border border-gray-200 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -55,7 +69,7 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 // Sidebar Component
-function Sidebar({ active }: { active: string }) {
+function Sidebar({ active, userName, userImage }: { active: string; userName: string; userImage?: string }) {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
     { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
@@ -65,8 +79,6 @@ function Sidebar({ active }: { active: string }) {
     { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/patient/wellness" },
     { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/patient/chat" },
     { id: "community", label: "Community", icon: Users, href: "/patient/community" },
-    { id: "profile", label: "My Profile", icon: User, href: "/patient/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/patient/settings" },
   ];
 
   return (
@@ -74,9 +86,9 @@ function Sidebar({ active }: { active: string }) {
       {/* Profile Section */}
       <div className="border-b border-emerald-700 p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Sarah Johnson" size={48} />
+          <Avatar name={userName} imageUrl={userImage} size={48} />
           <div className="flex-1">
-            <p className="font-semibold text-white">Sarah Johnson</p>
+            <p className="font-semibold text-white">{userName}</p>
             <p className="text-xs text-emerald-200">Patient</p>
           </div>
         </div>
@@ -130,7 +142,7 @@ function VitalCard({
   label: string;
   value: string;
   unit: string;
-  status: "normal" | "warning" | "critical";
+  status: "normal" | "warning" | "critical" | "none";
   lastLogged: string;
   trend?: "up" | "down" | "stable";
 }) {
@@ -138,12 +150,14 @@ function VitalCard({
     normal: "bg-emerald-100 text-emerald-700 border-emerald-200",
     warning: "bg-yellow-100 text-yellow-700 border-yellow-200",
     critical: "bg-red-100 text-red-700 border-red-200",
+    none: "bg-gray-100 text-gray-600 border-gray-200",
   };
 
   const statusIcons = {
     normal: CheckCircle2,
     warning: AlertCircle,
     critical: AlertCircle,
+    none: Info,
   };
 
   const StatusIcon = statusIcons[status];
@@ -255,65 +269,448 @@ function TreatmentPlanCard({
   );
 }
 
+// Log Vitals Modal Component
+function LogVitalsModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  patientId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  patientId?: string;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    recorded_at: new Date().toISOString().slice(0, 16),
+    systolic_bp: "",
+    diastolic_bp: "",
+    heart_rate: "",
+    blood_sugar: "",
+    respiratory_rate: "",
+    temperature: "",
+    spo2: "",
+    weight: "",
+    height: "",
+    notes: "",
+  });
+
+  const [bmi, setBmi] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (formData.height && formData.weight) {
+      const heightInMeters = parseFloat(formData.height) / 100;
+      const weightKg = parseFloat(formData.weight);
+      if (heightInMeters > 0 && weightKg > 0) {
+        const calculatedBmi = weightKg / (heightInMeters * heightInMeters);
+        setBmi(parseFloat(calculatedBmi.toFixed(2)));
+      }
+    } else {
+      setBmi(null);
+    }
+  }, [formData.height, formData.weight]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        patient_id: patientId,
+        recorded_by: patientId,
+        recorded_at: formData.recorded_at,
+        systolic_bp: formData.systolic_bp ? parseFloat(formData.systolic_bp) : null,
+        diastolic_bp: formData.diastolic_bp ? parseFloat(formData.diastolic_bp) : null,
+        heart_rate: formData.heart_rate ? parseFloat(formData.heart_rate) : null,
+        blood_sugar: formData.blood_sugar ? parseFloat(formData.blood_sugar) : null,
+        respiratory_rate: formData.respiratory_rate ? parseFloat(formData.respiratory_rate) : null,
+        temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+        spo2: formData.spo2 ? parseFloat(formData.spo2) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        height: formData.height ? parseFloat(formData.height) : null,
+        bmi: bmi,
+        measurement_method: "patient_sync",
+        notes: formData.notes,
+      };
+
+      const response = await fetch("/api/vitals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setFormData({
+          recorded_at: new Date().toISOString().slice(0, 16),
+          systolic_bp: "",
+          diastolic_bp: "",
+          heart_rate: "",
+          blood_sugar: "",
+          respiratory_rate: "",
+          temperature: "",
+          spo2: "",
+          weight: "",
+          height: "",
+          notes: "",
+        });
+        setBmi(null);
+        onClose();
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Error submitting vitals:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Log New Vitals</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 transition hover:text-gray-700"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              name="recorded_at"
+              value={formData.recorded_at}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Systolic BP (mmHg)
+              </label>
+              <input
+                type="number"
+                name="systolic_bp"
+                value={formData.systolic_bp}
+                onChange={handleChange}
+                placeholder="120"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Diastolic BP (mmHg)
+              </label>
+              <input
+                type="number"
+                name="diastolic_bp"
+                value={formData.diastolic_bp}
+                onChange={handleChange}
+                placeholder="80"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Heart Rate (bpm)
+              </label>
+              <input
+                type="number"
+                name="heart_rate"
+                value={formData.heart_rate}
+                onChange={handleChange}
+                placeholder="72"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Blood Sugar (mg/dL)
+              </label>
+              <input
+                type="number"
+                name="blood_sugar"
+                value={formData.blood_sugar}
+                onChange={handleChange}
+                placeholder="100"
+                step="0.1"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Respiratory Rate (breaths/min)
+              </label>
+              <input
+                type="number"
+                name="respiratory_rate"
+                value={formData.respiratory_rate}
+                onChange={handleChange}
+                placeholder="16"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Temperature (°F)
+              </label>
+              <input
+                type="number"
+                name="temperature"
+                value={formData.temperature}
+                onChange={handleChange}
+                placeholder="98.6"
+                step="0.1"
+                min="90"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                SpO2 (%)
+              </label>
+              <input
+                type="number"
+                name="spo2"
+                value={formData.spo2}
+                onChange={handleChange}
+                placeholder="98"
+                min="0"
+                max="100"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Weight (kg)
+              </label>
+              <input
+                type="number"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                placeholder="70"
+                step="0.1"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Height (cm)
+              </label>
+              <input
+                type="number"
+                name="height"
+                value={formData.height}
+                onChange={handleChange}
+                placeholder="170"
+                min="0"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+              />
+            </div>
+          </div>
+
+          {bmi && (
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+              <p className="text-sm font-medium text-emerald-800">
+                BMI: <span className="text-lg font-bold">{bmi}</span>
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Notes
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              placeholder="Any additional notes..."
+              rows={3}
+              maxLength={1000}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 font-semibold text-white transition hover:bg-emerald-700 disabled:bg-gray-400"
+            >
+              {isSubmitting ? "Saving..." : "Save Vitals"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // Main Health Page Component
 export default function PatientHealth() {
+  const { signOut } = useAuth();
+  const { user } = useUser();
   const [notificationCount] = useState(5);
   const [dateRange, setDateRange] = useState<"7" | "30" | "90">("7");
-  const patientName = "Sarah Johnson";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [latestVitals, setLatestVitals] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  const patientName = user?.fullName || "Patient";
+  const patientImage = user?.imageUrl;
+
+  const handleLogout = async () => {
+    await signOut({ redirectUrl: "/sign-in" });
+  };
+
+  // Fetch latest vitals from MongoDB
+  const fetchLatestVitals = async () => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/vitals?patient_id=${user.id}`);
+      const result = await response.json();
+      if (result.success && result.data.length > 0) {
+        setLatestVitals(result.data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching vitals:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestVitals();
+  }, [user?.id]);
+
+  const getVitalStatus = (name: string, value?: number): "normal" | "warning" | "critical" | "none" => {
+    if (value === undefined || value === null) return "none";
+
+    const ranges: Record<string, { normal: [number, number]; warning: [number, number] }> = {
+      systolic_bp: { normal: [90, 130], warning: [130, 180] },
+      diastolic_bp: { normal: [60, 85], warning: [85, 120] },
+      heart_rate: { normal: [60, 100], warning: [100, 120] },
+      blood_sugar: { normal: [70, 100], warning: [100, 200] },
+      spo2: { normal: [95, 100], warning: [90, 95] },
+      temperature: { normal: [97, 99], warning: [99, 101] },
+    };
+
+    const range = ranges[name];
+    if (!range) return "normal";
+
+    if (value >= range.normal[0] && value <= range.normal[1]) return "normal";
+    if (value >= range.warning[0] && value <= range.warning[1]) return "warning";
+    return "critical";
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
 
   const vitalsData = [
     {
       icon: Heart,
       label: "Blood Pressure",
-      value: "120/80",
+      value: latestVitals?.systolic_bp ? `${latestVitals.systolic_bp}/${latestVitals.diastolic_bp}` : "Not logged",
       unit: "mmHg",
-      status: "normal" as const,
-      lastLogged: "2 hours ago",
+      status: (latestVitals?.systolic_bp ? getVitalStatus("systolic_bp", latestVitals.systolic_bp) : "none") as "normal" | "warning" | "critical",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
       trend: "stable" as const,
     },
     {
       icon: Droplets,
       label: "Blood Sugar",
-      value: "95",
+      value: latestVitals?.blood_sugar ? latestVitals.blood_sugar.toFixed(1) : "Not logged",
       unit: "mg/dL",
-      status: "normal" as const,
-      lastLogged: "5 hours ago",
-      trend: "down" as const,
+      status: (latestVitals?.blood_sugar ? getVitalStatus("blood_sugar", latestVitals.blood_sugar) : "none") as "normal" | "warning" | "critical",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
+      trend: "stable" as const,
     },
     {
       icon: Activity,
       label: "Heart Rate",
-      value: "72",
+      value: latestVitals?.heart_rate || "Not logged",
       unit: "bpm",
-      status: "normal" as const,
-      lastLogged: "2 hours ago",
+      status: (latestVitals?.heart_rate ? getVitalStatus("heart_rate", latestVitals.heart_rate) : "none") as "normal" | "warning" | "critical",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
       trend: "stable" as const,
     },
     {
       icon: Wind,
       label: "SpO2",
-      value: "98",
+      value: latestVitals?.spo2 || "Not logged",
       unit: "%",
-      status: "normal" as const,
-      lastLogged: "2 hours ago",
+      status: (latestVitals?.spo2 ? getVitalStatus("spo2", latestVitals.spo2) : "none") as "normal" | "warning" | "critical",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
       trend: "stable" as const,
     },
     {
       icon: Weight,
       label: "Weight/BMI",
-      value: "70 kg",
-      unit: "BMI: 24.5",
+      value: latestVitals?.weight ? `${latestVitals.weight} kg (BMI: ${latestVitals.bmi})` : "Not logged",
+      unit: "",
       status: "normal" as const,
-      lastLogged: "Today",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
       trend: "stable" as const,
     },
     {
       icon: Thermometer,
       label: "Temperature",
-      value: "98.6",
+      value: latestVitals?.temperature ? latestVitals.temperature.toFixed(1) : "Not logged",
       unit: "°F",
-      status: "normal" as const,
-      lastLogged: "Today",
+      status: (latestVitals?.temperature ? getVitalStatus("temperature", latestVitals.temperature) : "none") as "normal" | "warning" | "critical",
+      lastLogged: latestVitals?.recorded_at ? formatDate(latestVitals.recorded_at) : "Never",
       trend: "stable" as const,
     },
   ];
@@ -375,47 +772,17 @@ export default function PatientHealth() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="health" />
+      <Sidebar active="health" userName={patientName} userImage={patientImage} />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
-        {/* Top Bar */}
-        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Search Bar */}
-            <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 w-96">
-              <Search className="h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search health records..."
-                className="flex-1 border-none bg-transparent text-sm outline-none"
-              />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Bell className="h-6 w-6" />
-                {notificationCount > 0 && (
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    {notificationCount}
-                  </div>
-                )}
-              </button>
-
-              {/* Settings */}
-              <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-                <Settings className="h-6 w-6" />
-              </button>
-
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-emerald-200">
-                <Avatar name={patientName} size={40} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <PatientTopBar
+          userName={patientName}
+          userImage={patientImage}
+          notificationCount={notificationCount}
+          onLogout={handleLogout}
+          searchPlaceholder="Search health records..."
+        />
 
         {/* Main Content */}
         <main className="p-8">
@@ -430,14 +797,26 @@ export default function PatientHealth() {
                 Physical and mental health tracking hub
               </p>
             </div>
-            <button className="rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-emerald-700">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-emerald-700"
+            >
               Log New Vitals
             </button>
           </div>
 
           {/* Vitals Tracking Section */}
           <div className="mb-8">
-            <h2 className="mb-4 text-lg font-bold text-gray-900">Vitals Tracking</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Vitals Tracking</h2>
+              <Link
+                href="/patient/health/vitals"
+                className="flex items-center gap-1 text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
+              >
+                View All
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {vitalsData.map((vital, idx) => (
                 <VitalCard key={idx} {...vital} />
@@ -564,6 +943,14 @@ export default function PatientHealth() {
           </div>
         </main>
       </div>
+
+      {/* Log Vitals Modal */}
+      <LogVitalsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchLatestVitals}
+        patientId={user?.id}
+      />
     </div>
   );
 }

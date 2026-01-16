@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { DoctorTopBar } from "@/components/DoctorTopBar";
 import Link from "next/link";
 import {
   Home,
@@ -29,7 +30,6 @@ import {
   AlertCircle,
   Activity,
   ClipboardList,
-  FileHeart,
   Clock,
   ChevronDown,
   ChevronUp,
@@ -116,76 +116,7 @@ function Sidebar() {
 }
 
 // Top Bar Component
-function TopBar() {
-  const { signOut } = useAuth();
-  const [profileOpen, setProfileOpen] = useState(false);
-
-  const handleLogout = () => {
-    signOut({ redirectUrl: "/sign-in" });
-  };
-
-  return (
-    <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-3 flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
-              <Bell className="h-6 w-6" />
-            </button>
-            <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white animate-pulse-soft">
-              5
-            </div>
-          </div>
-
-          <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 hover:rotate-45 duration-300">
-            <Settings className="h-6 w-6" />
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center rounded-full border border-gray-200 p-1 transition hover:border-gray-300"
-            >
-              <Avatar name="Emily Carter" size={40} />
-            </button>
-
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-lg z-50">
-                <div className="p-2">
-                  {[
-                    { label: "Profile", icon: Users },
-                    { label: "Account Settings", icon: Settings },
-                    { label: "Help & Support", icon: HelpCircle },
-                  ].map(({ label, icon: Icon }) => (
-                    <button
-                      key={label}
-                      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-emerald-50"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                  <div className="my-2 h-px bg-gray-200" />
-                  <button 
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Top Bar Component now shared via DoctorTopBar
 
 // Patient Card Component
 function PatientCard({
@@ -629,7 +560,7 @@ export default function PatientsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <TopBar />
+      <DoctorTopBar title="Patients" notificationCount={5} showSearch={false} />
 
       {/* Main Content */}
       <main className="md:ml-60">

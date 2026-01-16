@@ -71,6 +71,7 @@ export async function POST(req: Request) {
           ? `${first_name} ${last_name}`
           : email_addresses[0].email_address.split("@")[0];
 
+      // Only update Clerk-managed fields, preserve MongoDB-managed fields like role
       const updateData: any = {
         email: email_addresses[0].email_address,
         name: fullName,

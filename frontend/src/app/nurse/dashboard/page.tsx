@@ -77,12 +77,16 @@ function TopBar() {
   return (
     <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between px-4 py-4 sm:px-6">
-        {/* Left: Search */}
-        <div className="flex items-center gap-3 flex-1">
+        {/* Left: Mobile Menu Button */}
+        <div className="flex items-center gap-3">
           <button className="rounded-lg border border-gray-200 p-2 hover:bg-gray-100 md:hidden">
             <Menu className="h-5 w-5" />
           </button>
-          <div className="relative hidden w-80 sm:block">
+        </div>
+
+        {/* Center: Search */}
+        <div className="flex items-center justify-center flex-1">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"

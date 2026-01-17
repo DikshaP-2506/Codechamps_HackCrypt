@@ -499,11 +499,22 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DoctorTopBar searchPlaceholder="Search patients, appointments..." notificationCount={5} />
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar 
+        active="dashboard" 
+        userName={userName} 
+        userImage={userImage} 
+        userRole="Doctor"
+        navItems={doctorNavItems}
+      />
 
-      {/* Main Content */}
-      <main>
+      {/* Main Content Area */}
+      <div className="ml-64 flex-1">
+        <DoctorTopBar searchPlaceholder="Search patients, appointments..." notificationCount={5} />
+
+        {/* Main Content */}
+        <main>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Welcome Header */}
           <div className="mb-8">
@@ -596,6 +607,7 @@ export default function DoctorDashboard() {
           </section>
         </div>
       </main>
+      </div>
     </div>
   );
 }

@@ -621,6 +621,9 @@ function PDFPreviewModal({
 // Main Prescriptions Page Component
 export default function DoctorPrescriptions() {
   const { user } = useUser();
+  const userName = user?.fullName || user?.firstName || user?.lastName || "Doctor";
+  const userImage = user?.imageUrl;
+  
   const [notificationCount] = useState(3);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
@@ -678,9 +681,23 @@ export default function DoctorPrescriptions() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <Sidebar 
+        active="prescriptions" 
+        userName={userName} 
+        userImage={userImage} 
+        userRole="Doctor"
+        navItems={[
+          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
+          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
+          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
+          { id: "patients", label: "My Patients", icon: Users, href: "/doctor/patients" },
+          { id: "documents", label: "Documents", icon: FileText, href: "/doctor/documents" },
+        ]}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1">
+      <div className="ml-64 flex-1">
         {/* Top Bar */}
         <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
           <div className="flex items-center justify-between">

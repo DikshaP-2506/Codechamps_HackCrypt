@@ -111,7 +111,7 @@ export function Sidebar({ active, userName, userImage, userRole = "User", navIte
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-white text-[#006045] shadow-md"
+                    ? "bg-emerald-900/50 text-white shadow-inner"
                     : "text-white/90 hover:bg-white/10 hover:text-white"
                 }`}
               >

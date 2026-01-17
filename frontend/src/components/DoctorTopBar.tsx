@@ -59,16 +59,20 @@ export function DoctorTopBar({
   return (
     <div className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between px-4 py-4 sm:px-6">
-        {/* Left: optional menu/title/search */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Left: Mobile menu button or title */}
+        <div className="flex items-center gap-3">
           <button className="rounded-lg border border-gray-200 p-2 hover:bg-gray-100 md:hidden">
             <Menu className="h-5 w-5" />
           </button>
           {title ? (
             <h1 className="text-xl font-bold text-gray-900 truncate">{title}</h1>
           ) : null}
-          {showSearch && (
-            <div className="relative hidden w-80 sm:block">
+        </div>
+
+        {/* Center: Search */}
+        {showSearch && (
+          <div className="flex items-center justify-center flex-1">
+            <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <input
                 type="text"
@@ -76,8 +80,8 @@ export function DoctorTopBar({
                 className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-3 text-sm text-gray-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10"
               />
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Right: actions */}
         <div className="flex items-center gap-4">

@@ -24,6 +24,7 @@ import {
   Edit,
   FileText,
 } from "lucide-react";
+import { Sidebar } from "@/components/Sidebar";
 
 // Avatar Component
 function Avatar({ name, size = 40 }: { name: string; size?: number }) {
@@ -36,66 +37,10 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-teal-100 to-teal-50 font-mono font-semibold text-teal-700"
+      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-emerald-100 to-emerald-50 font-mono font-semibold text-emerald-700"
       style={{ width: size, height: size, fontSize: size * 0.35 }}
     >
       {initials}
-    </div>
-  );
-}
-
-// Sidebar Component
-function Sidebar({ active, userData }: { active: string; userData: any }) {
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, href: "/lab-reporter/dashboard" },
-    { id: "upload", label: "Upload Reports", icon: Upload, href: "/lab-reporter/upload" },
-   
-  ];
-
-  return (
-    <div className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-gradient-to-b from-teal-700 to-teal-800 text-white">
-      {/* Profile Section */}
-      <div className="border-b border-teal-600 p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name={userData?.name || "Lab Reporter"} size={48} />
-          <div className="flex-1">
-            <p className="font-semibold text-white">{userData?.name || "Loading..."}</p>
-            <p className="text-xs text-teal-200">{userData?.role === 'lab_reporter' ? 'Lab Reporter' : 'Lab Technician'}</p>
-            
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = active === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-emerald-600 text-white"
-                    : "text-teal-100 hover:bg-teal-600/50"
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Logout */}
-      <div className="border-t border-teal-600 p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-teal-100 transition hover:bg-red-600/20 hover:text-red-300">
-          <LogOut className="h-5 w-5" />
-          <span>Logout</span>
-        </button>
-      </div>
     </div>
   );
 }
@@ -189,6 +134,9 @@ function ReportCard({
 // Main Lab Reporter Dashboard Component
 export default function LabReporterDashboard() {
   const { user } = useUser();
+  const labReporterName = user?.fullName || "Lab Reporter";
+  const labReporterImage = user?.imageUrl;
+  
   const [notificationCount] = useState(3);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   
@@ -269,7 +217,16 @@ export default function LabReporterDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="dashboard" userData={userData} />
+      <Sidebar 
+        active="dashboard" 
+        userName={labReporterName} 
+        userImage={labReporterImage} 
+        userRole="Lab Reporter"
+        navItems={[
+          { id: "dashboard", label: "Dashboard", icon: Home, href: "/lab-reporter/dashboard" },
+          { id: "upload", label: "Upload Reports", icon: Upload, href: "/lab-reporter/upload" },
+        ]}
+      />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">

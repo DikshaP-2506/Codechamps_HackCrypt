@@ -52,66 +52,6 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
   );
 }
 
-// Sidebar Component
-function Sidebar({ active }: { active: string }) {
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-    { id: "patients", label: "My Patients", icon: Users, href: "/doctor/patients" },
-    { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-    { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-    { id: "reports", label: "Medical Records", icon: Folder, href: "/doctor/reports" },
-    { id: "consultations", label: "Consultations", icon: MessageCircle, href: "/doctor/consultations" },
-    { id: "resources", label: "Resources", icon: BookOpen, href: "/doctor/resources" },
-    { id: "profile", label: "My Profile", icon: User, href: "/doctor/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/doctor/settings" },
-  ];
-
-  return (
-    <div className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-gradient-to-b from-purple-800 to-purple-900 text-white">
-      {/* Profile Section */}
-      <div className="border-b border-purple-700 p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Dr. Sarah Johnson" size={48} />
-          <div className="flex-1">
-            <p className="font-semibold text-white">Dr. Sarah Johnson</p>
-            <p className="text-xs text-purple-200">Cardiologist</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = active === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-purple-700 text-white"
-                    : "text-purple-100 hover:bg-purple-700/50"
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Logout */}
-      <div className="border-t border-purple-700 p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-purple-100 transition hover:bg-purple-700/50">
-          <LogOut className="h-5 w-5" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // Prescription Card Component
 function PrescriptionCard({
@@ -734,11 +674,9 @@ export default function DoctorPrescriptions() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar active="prescriptions" />
 
       {/* Main Content Area */}
-      <div className="ml-64 flex-1">
+      <div className="flex-1">
         {/* Top Bar */}
         <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
           <div className="flex items-center justify-between">

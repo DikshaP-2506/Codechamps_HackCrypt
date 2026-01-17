@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   Users,
@@ -51,6 +51,7 @@ function Sidebar() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
+  const pathname = usePathname();
   const userName = user?.fullName || user?.firstName || user?.lastName || "Doctor";
   const userImage = user?.imageUrl;
 
@@ -73,7 +74,7 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-60 flex-col bg-emerald-900 md:flex">
+    <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col bg-emerald-900 md:flex">
       <div className="border-b border-emerald-700 px-4 py-6">
         <div className="flex flex-col items-center gap-4">
           <div className="transition-transform hover:scale-105">
@@ -87,16 +88,21 @@ function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 text-white/70 hover:bg-emerald-700/40`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        ))}
+        {navItems.map(({ label, icon: Icon, href }) => {
+          const isActive = pathname?.startsWith(href);
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                isActive ? "bg-emerald-100/20 text-white" : "text-white/70 hover:bg-emerald-700/40"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="border-t border-emerald-700 p-4">
@@ -116,7 +122,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="md:pl-60">
+      <div className="md:pl-64">
         <main className="min-h-screen px-6 py-6">{children}</main>
       </div>
     </div>

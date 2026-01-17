@@ -18,6 +18,7 @@ import {
   Database,
 } from "lucide-react";
 import { PatientTopBar } from "@/components/PatientTopBar";
+import { Sidebar } from "@/components/Sidebar";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {

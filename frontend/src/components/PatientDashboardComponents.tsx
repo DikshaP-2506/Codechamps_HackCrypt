@@ -7,25 +7,20 @@ import { vitalsAPI, prescriptionsAPI, appointmentsAPI, notificationsAPI, patient
 
 // Latest Vitals Card
 export function LatestVitalsCard({ patientId }: { patientId: string }) {
-  const [vitals, setVitals] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Hardcoded demo data
+  const vitals = {
+    systolic_bp: 120,
+    diastolic_bp: 80,
+    heart_rate: 72,
+    temperature: 98.6,
+    spo2: 98,
+    weight: 70,
+    height: 175,
+    recorded_at: new Date().toISOString()
+  };
 
-  useEffect(() => {
-    const fetchVitals = async () => {
-      try {
-        setLoading(true);
-        const data = await vitalsAPI.getLatest(patientId);
-        setVitals(data.data);
-      } catch (err) {
-        setError("Failed to load vitals");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVitals();
-  }, [patientId]);
+  const loading = false;
+  const error = null;
 
   if (loading) {
     return (
@@ -214,20 +209,35 @@ export function VitalsTrendChart({ patientId }: { patientId: string }) {
 
 // Active Prescriptions Widget
 export function ActivePrescriptionsWidget({ patientId }: { patientId: string }) {
-  const [prescriptions, setPrescriptions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPrescriptions = async () => {
-      try {
-        const data = await prescriptionsAPI.getActiveByPatientId(patientId);
-        setPrescriptions(data.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPrescriptions();
-  }, [patientId]);
+  // Hardcoded demo data
+  const prescriptions = [
+    {
+      _id: '1',
+      medication_name: 'Lisinopril',
+      dosage: '10mg',
+      frequency: 'Once daily',
+      duration: '30 days',
+      instructions: 'Take with water in the morning'
+    },
+    {
+      _id: '2',
+      medication_name: 'Metformin',
+      dosage: '500mg',
+      frequency: 'Twice daily',
+      duration: '90 days',
+      instructions: 'Take with meals'
+    },
+    {
+      _id: '3',
+      medication_name: 'Aspirin',
+      dosage: '81mg',
+      frequency: 'Once daily',
+      duration: 'Ongoing',
+      instructions: 'Take after breakfast'
+    }
+  ];
+  
+  const loading = false;
 
   if (loading) {
     return (
@@ -268,20 +278,35 @@ export function ActivePrescriptionsWidget({ patientId }: { patientId: string }) 
 
 // Upcoming Appointments Widget
 export function UpcomingAppointmentsWidget({ patientId }: { patientId: string }) {
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const data = await appointmentsAPI.getByPatientId(patientId, true);
-        setAppointments(data.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAppointments();
-  }, [patientId]);
+  // Hardcoded demo data
+  const appointments = [
+    {
+      _id: '1',
+      start_time: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+      appointment_type: 'video_call',
+      status: 'confirmed',
+      doctor_name: 'Dr. Sarah Johnson',
+      specialization: 'Cardiologist'
+    },
+    {
+      _id: '2',
+      start_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+      appointment_type: 'in_person',
+      status: 'confirmed',
+      doctor_name: 'Dr. Michael Chen',
+      specialization: 'General Physician'
+    },
+    {
+      _id: '3',
+      start_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days from now
+      appointment_type: 'video_call',
+      status: 'pending',
+      doctor_name: 'Dr. Emily Rodriguez',
+      specialization: 'Dermatologist'
+    }
+  ];
+  
+  const loading = false;
 
   if (loading) {
     return (
@@ -337,31 +362,58 @@ export function UpcomingAppointmentsWidget({ patientId }: { patientId: string })
 
 // Notification Center
 export function NotificationCenter({ recipientId }: { recipientId: string }) {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  // Hardcoded demo data
+  const notifications = [
+    {
+      _id: '1',
+      title: 'Appointment Reminder',
+      message: 'You have an appointment with Dr. Sarah Johnson tomorrow at 10:00 AM',
+      type: 'reminder',
+      is_read: false,
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+    },
+    {
+      _id: '2',
+      title: 'Lab Results Available',
+      message: 'Your blood test results are now available to view',
+      type: 'lab_result',
+      is_read: false,
+      created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() // 5 hours ago
+    },
+    {
+      _id: '3',
+      title: 'Prescription Refill Due',
+      message: 'Your Lisinopril prescription needs to be refilled in 3 days',
+      type: 'prescription',
+      is_read: true,
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
+    },
+    {
+      _id: '4',
+      title: 'Health Tip',
+      message: 'Remember to stay hydrated! Aim for 8 glasses of water daily',
+      type: 'health_tip',
+      is_read: true,
+      created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() // 2 days ago
+    },
+    {
+      _id: '5',
+      title: 'New Message',
+      message: 'Dr. Johnson has replied to your query about medication dosage',
+      type: 'message',
+      is_read: false,
+      created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() // 12 hours ago
+    }
+  ];
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const countData = await notificationsAPI.getUnreadCount(recipientId);
-        setUnreadCount(countData.data?.unread_count || 0);
+  const [localNotifications, setLocalNotifications] = useState(notifications);
+  const unreadCount = localNotifications.filter(n => !n.is_read).length;
+  const loading = false;
 
-        const notifData = await notificationsAPI.getByRecipientId(recipientId, false);
-        setNotifications(notifData.data || []);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
-  }, [recipientId]);
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    await notificationsAPI.markAsRead(notificationId);
-    setNotifications(notifications.map(n =>
+  const handleMarkAsRead = (notificationId: string) => {
+    setLocalNotifications(localNotifications.map(n =>
       n._id === notificationId ? { ...n, is_read: true } : n
     ));
-    setUnreadCount(Math.max(0, unreadCount - 1));
   };
 
   return (
@@ -383,29 +435,29 @@ export function NotificationCenter({ recipientId }: { recipientId: string }) {
         <p className="text-sm text-gray-600">No notifications</p>
       ) : (
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {notifications.slice(0, 5).map((notif) => (
+          {localNotifications.slice(0, 5).map((notif) => (
             <div
               key={notif._id}
               className={`p-3 rounded-lg border ${
                 notif.is_read
                   ? 'bg-gray-50 border-gray-200'
-                  : 'bg-blue-50 border-blue-200'
+                  : 'bg-emerald-50 border-emerald-200'
               } cursor-pointer hover:shadow-sm transition`}
               onClick={() => !notif.is_read && handleMarkAsRead(notif._id)}
             >
               <div className="flex items-start gap-2">
-                {notif.notification_type === 'health_alert' && (
-                  <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+                {notif.type === 'lab_result' && (
+                  <AlertCircle className="h-4 w-4 text-[#006045] flex-shrink-0 mt-0.5" />
                 )}
-                {notif.notification_type === 'appointment_reminder' && (
-                  <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                {notif.type === 'reminder' && (
+                  <Calendar className="h-4 w-4 text-[#006045] flex-shrink-0 mt-0.5" />
                 )}
-                {notif.notification_type === 'prescription_refill' && (
-                  <Pill className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                {notif.type === 'prescription' && (
+                  <Pill className="h-4 w-4 text-[#006045] flex-shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                  <p className="text-xs text-gray-600 mt-1">{notif.body}</p>
+                  <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
                 </div>
               </div>
             </div>
@@ -418,20 +470,18 @@ export function NotificationCenter({ recipientId }: { recipientId: string }) {
 
 // Health Summary Card
 export function HealthSummaryCard({ patientId }: { patientId: string }) {
-  const [patient, setPatient] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPatient = async () => {
-      try {
-        const data = await patientAPI.getById(patientId);
-        setPatient(data.data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPatient();
-  }, [patientId]);
+  // Hardcoded demo data
+  const patient = {
+    blood_group: 'O+',
+    date_of_birth: '1990-05-15',
+    allergies: ['Penicillin', 'Peanuts'],
+    chronic_conditions: ['Hypertension'],
+    gender: 'Male',
+    height: 175,
+    weight: 70
+  };
+  
+  const loading = false;
 
   if (loading || !patient) return null;
 

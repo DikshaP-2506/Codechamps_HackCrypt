@@ -34,6 +34,7 @@ import {
   DoctorStatsCard,
 } from "@/components/DoctorDashboardComponents";
 import { DoctorTopBar } from "@/components/DoctorTopBar";
+import { Sidebar } from "@/components/Sidebar";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
@@ -62,82 +63,6 @@ function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string
     >
       {initials}
     </div>
-  );
-}
-
-// Sidebar Component
-function Sidebar() {
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
-  const userName = user?.fullName || user?.firstName || user?.lastName || "Doctor";
-  const userImage = user?.imageUrl;
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-  };
-
-  const navItems = [
-    { label: "Dashboard", icon: Home, active: true, href: "/doctor/dashboard" },
-    { label: "Patients", icon: Users, href: "/doctor/patients" },
-    { label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-    { label: "Analytics", icon: BarChart2, href: "/doctor/analytics" },
-    { label: "Documents", icon: FileText, href: "/doctor/documents" },
-    { label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-    { label: "Treatment Plans", icon: Target, href: "/doctor/treatment-plans" },
-    { label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
-    { label: "Wellness Library", icon: Heart, href: "/doctor/wellness" },
-    { label: "Collaboration", icon: Users, href: "/doctor/collaboration" },
-    { label: "Settings", icon: Settings, href: "/doctor/settings" },
-  ];
-
-  return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-60 flex-col bg-emerald-900 md:flex">
-      {/* Profile Section */}
-      <div className="border-b border-emerald-700 px-4 py-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="transition-transform hover:scale-105">
-            <Avatar name={userName} imageUrl={userImage} size={56} />
-          </div>
-          <div className="text-center">
-            <h3 className="text-base font-semibold text-white">
-              {userName}
-            </h3>
-            <p className="text-sm text-white/70">Cardiologist</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, active, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
-              active
-                ? "bg-emerald-100/20 text-white"
-                : "text-white/70 hover:bg-emerald-700/40"
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-
-      {/* Logout Button */}
-      <div className="border-t border-emerald-700 p-4">
-        <button 
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-400 transition-all hover:bg-red-500 hover:text-white"
-        >
-          <LogOut className="h-5 w-5" />
-          <span className="text-sm font-medium">Logout</span>
-        </button>
-      </div>
-    </aside>
   );
 }
 
@@ -556,10 +481,30 @@ function PatientTable() {
 export default function DoctorDashboard() {
   const { user } = useUser();
   const doctorId = user?.id || "";
+  const userName = user?.fullName || user?.firstName || user?.lastName || "Doctor";
+  const userImage = user?.imageUrl;
+
+  const doctorNavItems = [
+    { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
+    { id: "health", label: "My Health", icon: Activity, href: "/doctor/health" },
+    { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
+    { id: "documents", label: "Documents", icon: FileText, href: "/doctor/documents" },
+    { id: "medications", label: "Medications", icon: Pill, href: "/doctor/medications" },
+    { id: "wellness", label: "Wellness Library", icon: Heart, href: "/doctor/wellness" },
+    { id: "chat", label: "Chat Support", icon: Users, href: "/doctor/chat" },
+    { id: "community", label: "Community", icon: Users, href: "/doctor/community" },
+    { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar 
+        active="dashboard" 
+        userName={userName} 
+        userImage={userImage} 
+        userRole="Doctor"
+        navItems={doctorNavItems}
+      />
       <DoctorTopBar searchPlaceholder="Search patients, appointments..." notificationCount={5} />
 
       {/* Main Content */}

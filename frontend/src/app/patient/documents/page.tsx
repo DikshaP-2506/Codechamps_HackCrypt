@@ -234,7 +234,7 @@ export default function PatientDocumentsPage() {
         </div>
         <button
           onClick={() => setViewAllPatients(!viewAllPatients)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center gap-2"
+          className="px-4 py-2 bg-[#006045] text-white rounded-md hover:bg-emerald-700 transition flex items-center gap-2"
         >
           {viewAllPatients ? (
             <>
@@ -276,7 +276,7 @@ export default function PatientDocumentsPage() {
               <select
                 value={uploadData.document_type}
                 onChange={(e) => setUploadData({ ...uploadData, document_type: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               >
                 <option value="Lab Report">Lab Report</option>
                 <option value="Prescription">Prescription</option>
@@ -299,7 +299,7 @@ export default function PatientDocumentsPage() {
                 type="date"
                 value={uploadData.test_date}
                 onChange={(e) => setUploadData({ ...uploadData, test_date: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               />
             </div>
 
@@ -308,7 +308,7 @@ export default function PatientDocumentsPage() {
               <select
                 value={uploadData.laboratory}
                 onChange={(e) => setUploadData({ ...uploadData, laboratory: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               >
                 <option value="">Select lab...</option>
                 <option value="Hematology">Hematology</option>
@@ -324,7 +324,7 @@ export default function PatientDocumentsPage() {
               <select
                 value={uploadData.test_category}
                 onChange={(e) => setUploadData({ ...uploadData, test_category: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               >
                 <option value="">Select category...</option>
                 <option value="Routine">Routine</option>
@@ -345,7 +345,7 @@ export default function PatientDocumentsPage() {
                   value="normal"
                   checked={uploadData.priority === 'normal'}
                   onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-[#006045]"
                 />
                 <span className="text-sm">⚪ Normal</span>
               </label>
@@ -356,7 +356,7 @@ export default function PatientDocumentsPage() {
                   value="urgent"
                   checked={uploadData.priority === 'urgent'}
                   onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-[#006045]"
                 />
                 <span className="text-sm">🟡 Urgent</span>
               </label>
@@ -367,7 +367,7 @@ export default function PatientDocumentsPage() {
                   value="emergency"
                   checked={uploadData.priority === 'emergency'}
                   onChange={(e) => setUploadData({ ...uploadData, priority: e.target.value })}
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-[#006045]"
                 />
                 <span className="text-sm">🔴 Emergency</span>
               </label>
@@ -380,7 +380,7 @@ export default function PatientDocumentsPage() {
               value={uploadData.ordering_doctor}
               onChange={(e) => setUploadData({ ...uploadData, ordering_doctor: e.target.value })}
               disabled={loadingDoctors}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045] disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">
                 {loadingDoctors ? 'Loading doctors...' : 'Select doctor...'}
@@ -398,7 +398,7 @@ export default function PatientDocumentsPage() {
             <select
               value={uploadData.category}
               onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
             >
               <option value="medical_records">Medical Records</option>
               <option value="lab_results">Lab Results</option>
@@ -415,7 +415,7 @@ export default function PatientDocumentsPage() {
               value={uploadData.description}
               onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
               placeholder="Add notes about this document..."
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               rows={3}
             />
           </div>
@@ -427,7 +427,7 @@ export default function PatientDocumentsPage() {
               onChange={(e) => setUploadData({ ...uploadData, report_notes: e.target.value })}
               placeholder="Add any additional observations or notes about this report..."
               maxLength={500}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006045]"
               rows={3}
             />
           </div>
@@ -435,7 +435,7 @@ export default function PatientDocumentsPage() {
           <button
             type="submit"
             disabled={uploading || !selectedFile}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+            className="w-full bg-[#006045] text-white py-2 px-4 rounded-md hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
           >
             {uploading ? 'Uploading...' : 'Upload Document'}
           </button>
@@ -450,7 +450,7 @@ export default function PatientDocumentsPage() {
           </h2>
           <div className="text-sm text-gray-600">
             {!loading && (
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+              <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-medium">
                 {documents.length} {documents.length === 1 ? 'document' : 'documents'}
               </span>
             )}
@@ -459,7 +459,7 @@ export default function PatientDocumentsPage() {
         
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#006045]"></div>
             <p className="text-gray-600 mt-4">Loading documents...</p>
           </div>
         ) : documents.length === 0 ? (
@@ -484,8 +484,8 @@ export default function PatientDocumentsPage() {
               >
                 {/* Patient Info - Only show when viewing all patients */}
                 {viewAllPatients && doc.patient_metadata && (
-                  <div className="mb-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                    <h4 className="font-semibold text-blue-900 mb-2">Patient Information</h4>
+                  <div className="mb-3 p-3 bg-emerald-50 rounded-lg border-l-4 border-[#006045]">
+                    <h4 className="font-semibold text-emerald-900 mb-2">Patient Information</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                       <div>
                         <span className="text-gray-600">Name:</span>

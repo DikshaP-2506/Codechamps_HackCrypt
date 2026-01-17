@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import DoctorRequestedAppointments from "@/components/DoctorRequestedAppointments";
+import { Sidebar } from "@/components/Sidebar";
 import {
   Home,
   Users,
@@ -245,74 +246,7 @@ const statusBadge: Record<AppointmentStatus, string> = {
   "no-show": "bg-yellow-100 text-yellow-700",
 };
 
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
-  return (
-    <div
-      className="flex items-center justify-center rounded-full border border-purple-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
-      style={{ width: size, height: size, fontSize: size * 0.35 }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function Sidebar({ userName, userImage }: { userName?: string; userImage?: string }) {
-  const navItems = [
-    { label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-    { label: "Patients", icon: Users, href: "/doctor/patients" },
-    { label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-    { label: "Analytics", icon: BarChart2, href: "/doctor/analytics" },
-    { label: "Documents", icon: FileText, href: "/doctor/documents" },
-    { label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-    { label: "Treatment Plans", icon: Target, href: "/doctor/treatment-plans" },
-    { label: "Consultations", icon: Video, href: "/doctor/consultations" },
-    { label: "Resources", icon: Heart, href: "/doctor/resources" },
-    { label: "Settings", icon: Settings, href: "/doctor/settings" },
-  ];
-
-  return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col bg-gradient-to-b from-purple-800 to-purple-900 md:flex">
-      <div className="border-b border-purple-700 px-5 py-6">
-        <div className="flex items-center gap-3">
-          <Avatar name={userName || "Doctor"} imageUrl={userImage} size={52} />
-          <div>
-            <p className="text-sm font-semibold text-white">{userName || "Doctor"}</p>
-            <p className="text-xs text-purple-200">Cardiologist</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition text-purple-100 hover:bg-purple-700/60 ${
-              label === "Appointments" ? "bg-purple-700 text-white" : ""
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-
-      <div className="border-t border-purple-700 p-4">
-        <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-300 transition hover:bg-red-500 hover:text-white">
-          <LogOut className="h-5 w-5" />
-          <span className="text-sm font-medium">Logout</span>
-        </button>
-      </div>
-    </aside>
-  );
-}
 
 function TopBar({ onOpenNew }: { onOpenNew: () => void }) {
   return (
@@ -1129,7 +1063,23 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar userName={user?.fullName || undefined} userImage={user?.imageUrl} />
+      <Sidebar 
+        active="appointments"
+        userName={user?.fullName || "Doctor"}
+        userImage={user?.imageUrl}
+        userRole="Doctor"
+        navItems={[
+          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
+          { id: "patients", label: "Patients", icon: Users, href: "/doctor/patients" },
+          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
+          { id: "documents", label: "Documents", icon: FileText, href: "/doctor/documents" },
+          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
+          { id: "wellness", label: "Wellness Library", icon: Heart, href: "/doctor/wellness" },
+          { id: "chat", label: "Chat Support", icon: VideoIcon, href: "/doctor/chat" },
+          { id: "community", label: "Community", icon: Target, href: "/doctor/community" },
+          { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
+        ]}
+      />
 
       <div className="md:pl-64">
         <TopBar onOpenNew={() => setOpenNewModal(true)} />

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { Sidebar } from "@/components/Sidebar";
 import {
   Home,
   Activity,
@@ -32,86 +34,6 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-
-// Avatar Component
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div
-      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
-      style={{ width: size, height: size, fontSize: size * 0.35 }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-// Sidebar Component
-function Sidebar({ active }: { active: string }) {
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-    { id: "patients", label: "My Patients", icon: Users, href: "/doctor/patients" },
-    { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-    { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-    { id: "reports", label: "Medical Records", icon: Folder, href: "/doctor/reports" },
-    { id: "consultations", label: "Consultations", icon: MessageCircle, href: "/doctor/consultations" },
-    { id: "resources", label: "Resources", icon: BookOpen, href: "/doctor/resources" },
-    { id: "profile", label: "My Profile", icon: User, href: "/doctor/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/doctor/settings" },
-  ];
-
-  return (
-    <div className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-gradient-to-b from-purple-800 to-purple-900 text-white">
-      {/* Profile Section */}
-      <div className="border-b border-purple-700 p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name="Dr. Sarah Johnson" size={48} />
-          <div className="flex-1">
-            <p className="font-semibold text-white">Dr. Sarah Johnson</p>
-            <p className="text-xs text-purple-200">Cardiologist</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = active === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-purple-700 text-white"
-                    : "text-purple-100 hover:bg-purple-700/50"
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Logout */}
-      <div className="border-t border-purple-700 p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-purple-100 transition hover:bg-purple-700/50">
-          <LogOut className="h-5 w-5" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // Prescription Card Component
 function PrescriptionCard({
@@ -677,6 +599,7 @@ function PDFPreviewModal({
 
 // Main Prescriptions Page Component
 export default function DoctorPrescriptions() {
+  const { user } = useUser();
   const [notificationCount] = useState(3);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
@@ -735,7 +658,23 @@ export default function DoctorPrescriptions() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="prescriptions" />
+      <Sidebar 
+        active="prescriptions"
+        userName={user?.fullName || "Doctor"}
+        userImage={user?.imageUrl}
+        userRole="Doctor"
+        navItems={[
+          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
+          { id: "patients", label: "Patients", icon: Users, href: "/doctor/patients" },
+          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
+          { id: "documents", label: "Documents", icon: Folder, href: "/doctor/documents" },
+          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
+          { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/doctor/wellness" },
+          { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/doctor/chat" },
+          { id: "community", label: "Community", icon: User, href: "/doctor/community" },
+          { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
+        ]}
+      />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">
@@ -768,11 +707,6 @@ export default function DoctorPrescriptions() {
               <button className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100">
                 <Settings className="h-6 w-6" />
               </button>
-
-              {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-purple-200">
-                <Avatar name={doctorName} size={40} />
-              </div>
             </div>
           </div>
         </div>

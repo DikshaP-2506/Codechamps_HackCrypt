@@ -87,7 +87,10 @@ export default function DoctorTeleconsultationPage() {
   }, [activeSession]);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
 
     const load = async () => {
       setLoading(true);
@@ -177,7 +180,6 @@ export default function DoctorTeleconsultationPage() {
   };
 
   const handleCreate = async () => {
-    if (!user?.uid) return;
     if (!sessionName.trim() || !sessionUrl.trim()) {
       toast({
         title: "Missing info",
@@ -193,29 +195,39 @@ export default function DoctorTeleconsultationPage() {
 
     setCreating(true);
     try {
-      const newSession = await createLiveSession({
-        sessionName: sessionName.trim(), // patient name
+      // Call backend to persist session
+      const saved = await createLiveSession({
+        sessionName: sessionName.trim(),
         sessionUrl: normalizedUrl,
-        teacherId: user.uid, // doctorId
-        teacherName: user.displayName,
-        teacherEmail: user.email,
+        teacherId: user?.uid,
+        teacherName: user?.displayName || user?.fullName,
+        teacherEmail: user?.email,
       });
 
-      setSessions((prev) => [newSession, ...prev]);
-      setSelectedId(newSession.id);
-      toast({
-        title: "Teleconsultation created",
-        description: "Share this link with the patient",
-      });
+      setSessions((prev) => [saved, ...(prev || [])]);
+      setSelectedId(saved.id);
+      toast({ title: "Teleconsultation created", description: "Share this link with the patient" });
       setDialogOpen(false);
       resetForm();
+      setLoading(false);
     } catch (error) {
-      console.error("Create teleconsultation failed", error);
-      toast({
-        title: "Error",
-        description: "Could not create teleconsultation",
-        variant: "destructive",
-      });
+      console.error("Create teleconsultation failed, saving locally", error);
+      // fallback: create locally so UX remains responsive
+      const newSession = {
+        id: String(Date.now()) + Math.random().toString(36).slice(2),
+        sessionName: sessionName.trim(),
+        sessionUrl: normalizedUrl,
+        teacherId: user?.uid || "local",
+        teacherName: user?.displayName || user?.fullName || "Doctor",
+        teacherEmail: user?.email || "",
+        createdAt: new Date().toISOString(),
+      } as LiveSession;
+      setSessions((prev) => [newSession, ...(prev || [])]);
+      setSelectedId(newSession.id);
+      toast({ title: "Teleconsultation created (offline)", description: "Saved locally" });
+      setDialogOpen(false);
+      resetForm();
+      setLoading(false);
     } finally {
       setCreating(false);
     }

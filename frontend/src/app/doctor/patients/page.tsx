@@ -191,12 +191,12 @@ export default function DoctorPatientsPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-blue-600 font-semibold">
-                            {patient.name.charAt(0).toUpperCase()}
+                            {(patient.name || 'Unknown').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {patient.name}
+                            {patient.name || 'Unknown'}
                           </div>
                           <div className="text-sm text-gray-500">
                             Registered: {formatDate(patient.created_at)}
@@ -292,7 +292,7 @@ export default function DoctorPatientsPage() {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedPatient.name}
+                    {selectedPatient.name || 'Unknown'}
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
                     Patient ID: {selectedPatient._id}

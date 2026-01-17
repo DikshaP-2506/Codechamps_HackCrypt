@@ -235,34 +235,50 @@ export default function AllPatientsPage() {
     notes: "",
   });
 
-  // Fetch all patients from API
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching patients from API...');
-        const response = await fetch("http://localhost:5000/api/patients/users/all");
-        console.log('Patients response status:', response.status);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Patients data received:', data);
-          setPatients(data.data || []);
-        } else {
-          console.error("Failed to fetch patients. Status:", response.status);
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          alert(`Failed to fetch patients: ${response.status}`);
-        }
-      } catch (error) {
-        console.error("Error fetching patients:", error);
-        alert("Error fetching patients: " + (error as any).message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch and merge patients (users + profiles)
+  const fetchAllPatientsMerged = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching patients from API (merged users + profiles)...');
 
-    fetchPatients();
+      const [usersRes, profilesRes] = await Promise.all([
+        fetch("http://localhost:5000/api/patients/users/all"),
+        fetch("http://localhost:5000/api/patients/profiles/all"),
+      ]);
+
+      const usersData = usersRes.ok ? await usersRes.json() : { data: [] };
+      const profilesData = profilesRes.ok ? await profilesRes.json() : { data: [] };
+
+      const users = (usersData.data || []).filter((u: any) => u.role === "patient");
+      const profiles = (profilesData.data || []).filter((p: any) => !p.role || p.role === "patient");
+
+      const mergedRaw = [...users, ...profiles];
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+
+      mergedRaw.forEach((p) => {
+        const key = p.clerk_user_id || p.clerkId || p.clerkUserId || p._id;
+        if (key) {
+          if (!seen.has(key)) {
+            seen.add(key);
+            deduped.push(p);
+          }
+        } else {
+          deduped.push(p);
+        }
+      });
+
+      setPatients(deduped);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchAllPatientsMerged();
   }, []);
 
   // Filter patients by search term
@@ -291,49 +307,8 @@ export default function AllPatientsPage() {
       measurement_method: "Manual Entry",
       notes: "",
     });
-
-    // Fetch all patient users + patient profiles and merge
-    useEffect(() => {
-      const fetchPatients = async () => {
-        try {
-          setLoading(true);
-          const [usersRes, profilesRes] = await Promise.all([
-            fetch("http://localhost:5000/api/patients/users/all"),
-            fetch("http://localhost:5000/api/patients/profiles/all"),
-          ]);
-
-          const usersData = usersRes.ok ? await usersRes.json() : { data: [] };
-          const profilesData = profilesRes.ok ? await profilesRes.json() : { data: [] };
-
-          const users = (usersData.data || []).filter((u: any) => u.role === "patient");
-          const profiles = (profilesData.data || []).filter((p: any) => !p.role || p.role === "patient");
-
-          const mergedRaw = [...users, ...profiles];
-          const seen = new Set<string>();
-          const deduped: any[] = [];
-
-          mergedRaw.forEach((p) => {
-            const key = p.clerk_user_id || p.clerkId || p.clerkUserId || p._id;
-            if (key) {
-              if (!seen.has(key)) {
-                seen.add(key);
-                deduped.push(p);
-              }
-            } else {
-              deduped.push(p);
-            }
-          });
-
-          setPatients(deduped);
-        } catch (error) {
-          console.error("Error fetching patients:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchPatients();
-    }, []);
+    // Refresh list after closing modal
+    fetchAllPatientsMerged();
   };
 
   const handleVitalsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

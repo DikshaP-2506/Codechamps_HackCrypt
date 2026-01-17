@@ -50,17 +50,57 @@ export const createLiveSession = async (payload: {
   };
 
   const { data } = await api.post("/", body);
-  return data.session;
+  const session = data?.session;
+  if (!session) throw new Error("Invalid response from server");
+  // normalize Mongoose _id to id for frontend usage
+  const normalized = {
+    id: session.id || session._id,
+    sessionName: session.sessionName,
+    sessionUrl: session.sessionUrl,
+    teacherId: session.teacherId,
+    teacherName: session.teacherName,
+    teacherEmail: session.teacherEmail,
+    doctorId: session.doctorId,
+    doctorName: session.doctorName,
+    doctorEmail: session.doctorEmail,
+    createdAt: session.createdAt,
+  } as LiveSession;
+
+  return normalized;
 };
 
 export const getDoctorSessions = async (doctorId: string): Promise<LiveSession[]> => {
   const { data } = await api.get("/doctor", { params: { doctorId } });
-  return data.sessions || [];
+  const sessions = data.sessions || [];
+  return sessions.map((s: any) => ({
+    id: s.id || s._id,
+    sessionName: s.sessionName,
+    sessionUrl: s.sessionUrl,
+    teacherId: s.teacherId,
+    teacherName: s.teacherName,
+    teacherEmail: s.teacherEmail,
+    doctorId: s.doctorId,
+    doctorName: s.doctorName,
+    doctorEmail: s.doctorEmail,
+    createdAt: s.createdAt,
+  }));
 };
 
 export const getPatientSessions = async (patientId: string): Promise<LiveSession[]> => {
   const { data } = await api.get("/patient", { params: { patientId } });
-  return data.sessions || [];
+  const sessions = data.sessions || [];
+  return sessions.map((s: any) => ({
+    id: s.id || s._id,
+    sessionName: s.sessionName,
+    sessionUrl: s.sessionUrl,
+    teacherId: s.teacherId,
+    teacherName: s.teacherName,
+    teacherEmail: s.teacherEmail,
+    doctorId: s.doctorId,
+    doctorName: s.doctorName,
+    doctorEmail: s.doctorEmail,
+    createdAt: s.createdAt,
+  }));
 };
 
 // Backward compatibility aliases

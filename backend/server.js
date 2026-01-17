@@ -46,7 +46,12 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', limiter);
+// In development we disable the global rate limiter to avoid 429 during local testing
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/', limiter);
+} else {
+  console.log('Global API rate limiter disabled in development environment');
+}
 
 // Health check route
 app.get('/health', (req, res) => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getPatientUsers,
+  getAllPatients,
   getPatientProfiles,
   getPatientById,
   createPatient,
@@ -19,7 +19,7 @@ const {
 const { validatePatient, validateAutoSave } = require('../middleware/validators');
 
 // Get all patient users from users collection
-router.get('/users/all', getPatientUsers);
+router.get('/users/all', getAllPatients);
 // Get all patient profiles from patients collection
 router.get('/profiles/all', getPatientProfiles);
 
@@ -32,7 +32,7 @@ router.get('/:patientId/comprehensive', getComprehensivePatientData);
 
 // Main patient routes
 router.route('/')
-  .get(getPatientUsers)
+  .get(getAllPatients)
   .post(validatePatient, createPatient);
 
 router.route('/:id')

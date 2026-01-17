@@ -327,11 +327,18 @@ function LogMoodModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+        let result: any = null;
+        // If server returned JSON, parse it; otherwise read text for error details
+        try {
+          result = await response.json();
+        } catch (parseErr) {
+          const text = await response.text().catch(() => null);
+          result = { success: false, message: text || `HTTP ${response.status}` };
+        }
 
-      const result = await response.json();
-      console.log("API Response:", result);
+        console.log("API Response:", result);
 
-      if (response.ok && result.success) {
+        if (response.ok && result && result.success) {
         setFormData({
           mood_rating: "",
           stress_level: "",
@@ -345,8 +352,9 @@ function LogMoodModal({
         onClose();
         await onSuccess();
       } else {
-        console.error("API error:", response.status, result);
-        alert("Failed to save mood log: " + (result.message || "Unknown error"));
+          console.error("API error:", response.status, result);
+          const message = result?.message || `Request failed with status ${response.status}`;
+          alert("Failed to save mood log: " + message);
       }
     } catch (error) {
       console.error("Error submitting mood log:", error);

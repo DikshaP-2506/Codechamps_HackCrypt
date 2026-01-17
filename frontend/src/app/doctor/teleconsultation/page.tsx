@@ -23,7 +23,6 @@ import {
   LiveSession,
 } from "@/services/liveSessionService";
 import { cn } from "@/lib/utils";
-import { Sidebar } from "@/components/Sidebar";
 
 const SAMPLE_JAAS_URL =
   "https://8x8.vc/vpaas-magic-cookie-27bbe0bbe7d340799edfdd4b4250ddc6/SampleAppDownstairsReplacementsAdmitQuite";
@@ -284,26 +283,8 @@ export default function DoctorTeleconsultationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar 
-        active="teleconsultation"
-        userName={user?.name || "Doctor"}
-        userImage={user?.imageUrl}
-        userRole="Doctor"
-        navItems={[
-          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-          { id: "patients", label: "Patients", icon: Users, href: "/doctor/patients" },
-          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-          { id: "documents", label: "Documents", icon: FileText, href: "/doctor/documents" },
-          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-          { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/doctor/wellness" },
-          { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/doctor/chat" },
-          { id: "community", label: "Community", icon: Target, href: "/doctor/community" },
-          { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
-        ]}
-      />
-      <div className="md:pl-64">
-        <div className="p-6 space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Teleconsultation</h1>
@@ -442,5 +423,6 @@ export default function DoctorTeleconsultationPage() {
         </DialogContent>
       </Dialog>
     </div>
+  </div>
   );
 }

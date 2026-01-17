@@ -11,6 +11,7 @@ import {
   Folder,
   MessageCircle,
   Users,
+  Video,
   BookOpen,
   LogOut,
   Send,
@@ -59,6 +60,7 @@ function Sidebar({ active, userName, userImage, onLogout }: { active: string; us
     { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/patient/wellness" },
     { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/patient/chat" },
     { id: "community", label: "Community", icon: Users, href: "/patient/community" },
+    { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/patient/teleconsultation" },
   ];
 
   return (

@@ -68,6 +68,8 @@ app.use('/api/medical-documents', require('./routes/medicalDocumentRoutes'));
 app.use('/api/mental-health', require('./routes/mentalHealthRoutes'));
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+// Live sessions for teleconsultation (Jitsi / 8x8)
+app.use('/api/live-sessions', require('./routes/liveSessions.routes'));
 
 // Root route
 app.get('/', (req, res) => {

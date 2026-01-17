@@ -44,7 +44,7 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 
   return (
     <div
-      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
+      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-emerald-100 to-emerald-50 font-mono font-semibold text-emerald-700"
       style={{ width: size, height: size, fontSize: size * 0.35 }}
     >
       {initials}
@@ -84,8 +84,8 @@ function PrescriptionCard({
       <div className="mb-4 flex items-start justify-between">
         <div className="flex items-start gap-4">
           {/* Icon */}
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-            <Pill className="h-6 w-6 text-purple-600" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+            <Pill className="h-6 w-6 text-emerald-600" />
           </div>
 
           {/* Info */}
@@ -127,7 +127,7 @@ function PrescriptionCard({
           {prescription.medications.length > 2 && !expanded && (
             <button
               onClick={() => setExpanded(true)}
-              className="mt-2 flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-700"
+              className="mt-2 flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700"
             >
               +{prescription.medications.length - 2} more
               <ChevronDown className="h-3 w-3" />
@@ -136,7 +136,7 @@ function PrescriptionCard({
           {expanded && prescription.medications.length > 2 && (
             <button
               onClick={() => setExpanded(false)}
-              className="mt-2 flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-700"
+              className="mt-2 flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700"
             >
               Show less
               <ChevronUp className="h-3 w-3" />
@@ -234,7 +234,7 @@ function PrescriptionBuilderModal({
               <select
                 value={selectedPatient}
                 onChange={(e) => setSelectedPatient(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
                 <option value="">Choose a patient...</option>
                 <option value="john-doe">John Doe</option>
@@ -265,7 +265,7 @@ function PrescriptionBuilderModal({
               value={diagnosis}
               onChange={(e) => setDiagnosis(e.target.value)}
               placeholder="e.g., Type 2 Diabetes, Hypertension"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
@@ -276,7 +276,7 @@ function PrescriptionBuilderModal({
               <button
                 type="button"
                 onClick={addMedication}
-                className="text-sm font-medium text-purple-600 hover:text-purple-700"
+                className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
               >
                 + Add medication
               </button>
@@ -294,7 +294,7 @@ function PrescriptionBuilderModal({
                       newMeds[idx].drug = e.target.value;
                       setMedications(newMeds);
                     }}
-                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <input
                     type="text"
@@ -305,7 +305,7 @@ function PrescriptionBuilderModal({
                       newMeds[idx].dosage = e.target.value;
                       setMedications(newMeds);
                     }}
-                    className="w-24 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-24 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <input
                     type="text"
@@ -316,7 +316,7 @@ function PrescriptionBuilderModal({
                       newMeds[idx].frequency = e.target.value;
                       setMedications(newMeds);
                     }}
-                    className="w-32 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-32 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <input
                     type="text"
@@ -327,7 +327,7 @@ function PrescriptionBuilderModal({
                       newMeds[idx].duration = e.target.value;
                       setMedications(newMeds);
                     }}
-                    className="w-32 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-32 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   {medications.length > 1 && (
                     <button
@@ -353,7 +353,7 @@ function PrescriptionBuilderModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="Special instructions, contraindications, follow-up notes..."
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
@@ -365,7 +365,7 @@ function PrescriptionBuilderModal({
               </label>
               <input
                 type="date"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             <div>
@@ -374,7 +374,7 @@ function PrescriptionBuilderModal({
               </label>
               <input
                 type="date"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -416,6 +416,7 @@ function PrescriptionBuilderModal({
             <button
               type="submit"
               className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white transition hover:bg-purple-700"
+                className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
             >
               <Send className="h-4 w-4" />
               Create & Send
@@ -708,7 +709,7 @@ export default function DoctorPrescriptions() {
               </button>
 
               {/* Profile Avatar */}
-              <div className="rounded-full border-2 border-purple-200">
+              <div className="rounded-full border-2 border-emerald-200">
                 <Avatar name={doctorName} size={40} />
               </div>
             </div>
@@ -721,7 +722,7 @@ export default function DoctorPrescriptions() {
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Pill className="h-7 w-7 text-purple-600" />
+                <Pill className="h-7 w-7 text-emerald-600" />
                 Prescriptions
               </h1>
               <p className="mt-1 text-sm text-gray-600">
@@ -731,14 +732,14 @@ export default function DoctorPrescriptions() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowTemplate(true)}
-                className="flex items-center gap-2 rounded-lg border border-purple-300 bg-purple-50 px-6 py-3 font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100"
+                className="flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-6 py-3 font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
               >
                 <BookOpen className="h-5 w-5" />
                 Templates
               </button>
               <button
                 onClick={() => setShowBuilder(true)}
-                className="flex items-center gap-2 rounded-lg bg-purple-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-purple-700"
+                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-emerald-700"
               >
                 <Plus className="h-5 w-5" />
                 New Prescription
@@ -752,7 +753,7 @@ export default function DoctorPrescriptions() {
               onClick={() => setFilterTab("active")}
               className={`rounded-lg px-6 py-2 text-sm font-medium transition ${
                 filterTab === "active"
-                  ? "bg-purple-600 text-white"
+                  ? "bg-emerald-600 text-white"
                   : "border border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -762,7 +763,7 @@ export default function DoctorPrescriptions() {
               onClick={() => setFilterTab("all")}
               className={`rounded-lg px-6 py-2 text-sm font-medium transition ${
                 filterTab === "all"
-                  ? "bg-purple-600 text-white"
+                  ? "bg-emerald-600 text-white"
                   : "border border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -772,7 +773,7 @@ export default function DoctorPrescriptions() {
               onClick={() => setFilterTab("history")}
               className={`rounded-lg px-6 py-2 text-sm font-medium transition ${
                 filterTab === "history"
-                  ? "bg-purple-600 text-white"
+                  ? "bg-emerald-600 text-white"
                   : "border border-gray-300 text-gray-700 hover:bg-gray-50"
               }`}
             >

@@ -35,6 +35,26 @@ import {
   XCircle,
 } from "lucide-react";
 
+// Avatar Component
+function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div
+      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
+      style={{ width: size, height: size, fontSize: size * 0.35 }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+
 // Prescription Card Component
 function PrescriptionCard({
   prescription,
@@ -657,27 +677,9 @@ export default function DoctorPrescriptions() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar 
-        active="prescriptions"
-        userName={user?.fullName || "Doctor"}
-        userImage={user?.imageUrl}
-        userRole="Doctor"
-        navItems={[
-          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-          { id: "patients", label: "Patients", icon: Users, href: "/doctor/patients" },
-          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-          { id: "documents", label: "Documents", icon: Folder, href: "/doctor/documents" },
-          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-          { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/doctor/wellness" },
-          { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/doctor/chat" },
-          { id: "community", label: "Community", icon: User, href: "/doctor/community" },
-          { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
-        ]}
-      />
 
       {/* Main Content Area */}
-      <div className="ml-64 flex-1">
+      <div className="flex-1">
         {/* Top Bar */}
         <div className="sticky top-0 z-30 border-b border-gray-200 bg-white px-8 py-4">
           <div className="flex items-center justify-between">

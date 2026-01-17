@@ -66,6 +66,8 @@ function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string
   );
 }
 
+
+
 // Top Bar Component now shared via DoctorTopBar
 
 // Stat Card Component
@@ -498,17 +500,10 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar 
-        active="dashboard" 
-        userName={userName} 
-        userImage={userImage} 
-        userRole="Doctor"
-        navItems={doctorNavItems}
-      />
       <DoctorTopBar searchPlaceholder="Search patients, appointments..." notificationCount={5} />
 
       {/* Main Content */}
-      <main className="md:ml-60">
+      <main>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Welcome Header */}
           <div className="mb-8">

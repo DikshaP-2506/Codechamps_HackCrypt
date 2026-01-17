@@ -246,6 +246,24 @@ const statusBadge: Record<AppointmentStatus, string> = {
   "no-show": "bg-yellow-100 text-yellow-700",
 };
 
+function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div
+      className="flex items-center justify-center rounded-full border border-purple-200 bg-gradient-to-br from-purple-100 to-purple-50 font-mono font-semibold text-purple-700"
+      style={{ width: size, height: size, fontSize: size * 0.35 }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 
 
 function TopBar({ onOpenNew }: { onOpenNew: () => void }) {
@@ -1063,25 +1081,8 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar 
-        active="appointments"
-        userName={user?.fullName || "Doctor"}
-        userImage={user?.imageUrl}
-        userRole="Doctor"
-        navItems={[
-          { id: "dashboard", label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
-          { id: "patients", label: "Patients", icon: Users, href: "/doctor/patients" },
-          { id: "appointments", label: "Appointments", icon: Calendar, href: "/doctor/appointments" },
-          { id: "documents", label: "Documents", icon: FileText, href: "/doctor/documents" },
-          { id: "prescriptions", label: "Prescriptions", icon: Pill, href: "/doctor/prescriptions" },
-          { id: "wellness", label: "Wellness Library", icon: Heart, href: "/doctor/wellness" },
-          { id: "chat", label: "Chat Support", icon: VideoIcon, href: "/doctor/chat" },
-          { id: "community", label: "Community", icon: Target, href: "/doctor/community" },
-          { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/doctor/teleconsultation" },
-        ]}
-      />
-
-      <div className="md:pl-64">
+      
+      <div>
         <TopBar onOpenNew={() => setOpenNewModal(true)} />
 
         <div className="mx-auto max-w-7xl px-4 py-6">

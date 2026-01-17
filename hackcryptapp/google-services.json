@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "940608783427",
+    "project_id": "hackcrypt-fb7f8",
+    "storage_bucket": "hackcrypt-fb7f8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:940608783427:android:4bd30c43062d7be69c80f6",
+        "android_client_info": {
+          "package_name": "com.chiragvispute.hackcryptapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCj8nwfIllHAP-xyTmTeD3bsiitUgzIdMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

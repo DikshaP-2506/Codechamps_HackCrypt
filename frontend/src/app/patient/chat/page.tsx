@@ -20,100 +20,6 @@ import {
 import { PatientTopBar } from "@/components/PatientTopBar";
 import { Sidebar } from "@/components/Sidebar";
 
-// Avatar Component
-function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
-  if (imageUrl) {
-    return (
-      <img
-        src={imageUrl}
-        alt={name}
-        className="rounded-full border border-gray-200 object-cover"
-        style={{ width: size, height: size }}
-      />
-    );
-  }
-
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div
-      className="flex items-center justify-center rounded-full border border-gray-200 bg-gradient-to-br from-emerald-100 to-emerald-50 font-mono font-semibold text-emerald-700"
-      style={{ width: size, height: size, fontSize: size * 0.35 }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-// Sidebar Component
-function Sidebar({ active, userName, userImage, onLogout }: { active: string; userName: string; userImage?: string; onLogout?: () => void }) {
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, href: "/patient/dashboard" },
-    { id: "health", label: "My Health", icon: Activity, href: "/patient/health" },
-    { id: "appointments", label: "Appointments", icon: Calendar, href: "/patient/appointments" },
-    { id: "documents", label: "Documents", icon: Folder, href: "/patient/documents" },
-    { id: "medications", label: "Medications", icon: Pill, href: "/patient/medications" },
-    { id: "wellness", label: "Wellness Library", icon: BookOpen, href: "/patient/wellness" },
-    { id: "chat", label: "Chat Support", icon: MessageCircle, href: "/patient/chat" },
-    { id: "community", label: "Community", icon: Users, href: "/patient/community" },
-    { id: "teleconsultation", label: "Teleconsultation", icon: Video, href: "/patient/teleconsultation" },
-  ];
-
-  return (
-    <div className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-gray-200 bg-gradient-to-b from-emerald-800 to-emerald-900 text-white">
-      {/* Profile Section */}
-      <div className="border-b border-emerald-700 p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name={userName} imageUrl={userImage} size={48} />
-          <div className="flex-1">
-            <p className="font-semibold text-white">{userName}</p>
-            <p className="text-xs text-emerald-200">Patient</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = active === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-emerald-700 text-white"
-                    : "text-emerald-100 hover:bg-emerald-700/50"
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Logout */}
-      <div className="border-t border-emerald-700 p-4">
-        <button
-          onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-700/50"
-        >
-          <LogOut className="h-5 w-5" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // Message Bubble Component
 function MessageBubble({
   message,
@@ -309,7 +215,7 @@ export default function ChatSupport() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar active="chat" userName={patientName} userImage={patientImage} onLogout={handleLogout} />
+      <Sidebar active="chat" userName={patientName} userImage={patientImage} userRole="Patient" />
 
       {/* Main Content Area */}
       <div className="ml-64 flex-1">

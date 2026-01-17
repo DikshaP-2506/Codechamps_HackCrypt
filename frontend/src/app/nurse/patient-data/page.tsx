@@ -22,6 +22,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { Sidebar } from "@/components/Sidebar";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
@@ -50,79 +51,6 @@ function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string
     >
       {initials}
     </div>
-  );
-}
-
-// Sidebar Component
-function Sidebar() {
-  const { user } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
-  const userName = user?.fullName || "Nurse Sarah";
-  const userImage = user?.imageUrl;
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-  };
-
-  const navItems = [
-    { label: "Dashboard", icon: Home, active: false, href: "/nurse/dashboard" },
-    { label: "Patient Data", icon: Activity, active: true, href: "/nurse/patient-data" },
-    { label: "Assigned Patients", icon: Users, href: "/nurse/patients" },
-    { label: "Tasks", icon: Clipboard, href: "/nurse/tasks" },
-    { label: "Vitals Monitoring", icon: Heart, href: "/nurse/vitals" },
-    { label: "Medications", icon: Syringe, href: "/nurse/medications" },
-    { label: "Appointments", icon: Calendar, href: "/nurse/appointments" },
-    { label: "Settings", icon: Settings, href: "/nurse/settings" },
-  ];
-
-  return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-60 flex-col bg-emerald-900 md:flex">
-      {/* Profile Section */}
-      <div className="border-b border-emerald-700 px-4 py-6">
-        <div className="flex flex-col items-center gap-4">
-          <div className="transition-transform hover:scale-105">
-            <Avatar name={userName} imageUrl={userImage} size={56} />
-          </div>
-          <div className="text-center">
-            <h3 className="text-base font-semibold text-white">
-              {userName}
-            </h3>
-            <p className="text-sm text-white/70">Registered Nurse</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map(({ label, icon: Icon, active, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
-              active
-                ? "bg-emerald-100/20 text-white"
-                : "text-white/70 hover:bg-emerald-700/40"
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-
-      {/* Logout Button */}
-      <div className="border-t border-emerald-700 p-4">
-        <button 
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/10 py-3 text-red-400 transition-all hover:bg-red-500 hover:text-white"
-        >
-          <LogOut className="h-5 w-5" />
-          <span className="text-sm font-medium">Logout</span>
-        </button>
-      </div>
-    </aside>
   );
 }
 
@@ -262,6 +190,9 @@ function Toast({
 // Main Patient Data Form Component
 export default function PatientDataForm() {
   const { user } = useUser();
+  const nurseName = user?.fullName || "Nurse Sarah";
+  const nurseImage = user?.imageUrl;
+  
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -372,7 +303,22 @@ export default function PatientDataForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar 
+        active="patient-data" 
+        userName={nurseName} 
+        userImage={nurseImage} 
+        userRole="Nurse"
+        navItems={[
+          { id: "dashboard", label: "Dashboard", icon: Home, href: "/nurse/dashboard" },
+          { id: "patient-data", label: "Patient Data", icon: Activity, href: "/nurse/patient-data" },
+          { id: "patients", label: "All Patients", icon: Users, href: "/nurse/patients" },
+          { id: "tasks", label: "Tasks", icon: Clipboard, href: "/nurse/tasks" },
+          { id: "vitals", label: "Vitals Monitoring", icon: Heart, href: "/nurse/vitals" },
+          { id: "medications", label: "Medications", icon: Syringe, href: "/nurse/medications" },
+          { id: "appointments", label: "Appointments", icon: Calendar, href: "/nurse/appointments" },
+          { id: "settings", label: "Settings", icon: Settings, href: "/nurse/settings" },
+        ]}
+      />
       <TopBar />
 
       {/* Main Content */}

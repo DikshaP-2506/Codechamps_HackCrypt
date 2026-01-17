@@ -276,7 +276,7 @@ export default function LabReporterUpload() {
   const fetchDoctors = async () => {
     setLoadingDoctors(true);
     try {
-      const response = await fetch('http://localhost:5001/api/users/doctors');
+      const response = await fetch('http://localhost:5000/api/users/doctors');
       const data = await response.json();
       if (data.success) {
         setDoctors(data.data);
@@ -360,7 +360,7 @@ export default function LabReporterUpload() {
         formData.append('metadata', JSON.stringify(metadata));
 
         // Upload to backend (Cloudinary)
-        const uploadResponse = await fetch('http://localhost:5001/api/medical-documents/upload', {
+        const uploadResponse = await fetch('http://localhost:5000/api/medical-documents/upload', {
           method: 'POST',
           body: formData,
         });

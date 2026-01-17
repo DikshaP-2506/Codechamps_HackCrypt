@@ -246,7 +246,7 @@ export default function LabReporterDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/medical-documents/stats/lab-reporter');
+      const response = await fetch('http://localhost:5000/api/medical-documents/stats/lab-reporter');
       const data = await response.json();
       
       if (data.success) {

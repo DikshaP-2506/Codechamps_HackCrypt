@@ -44,6 +44,11 @@ const nextConfig: NextConfig = {
           source: '/api/community/:path*',
           destination: 'http://localhost:5000/api/community/:path*',
         },
+        // Proxy users to backend
+        {
+          source: '/api/users/:path*',
+          destination: 'http://localhost:5000/api/users/:path*',
+        },
       ],
     };
   },

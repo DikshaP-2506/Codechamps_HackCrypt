@@ -33,19 +33,26 @@ export default async function AuthCallbackPage() {
       });
       
       if (existingUser) {
-        // User exists but with different clerkId - update it
-        console.log("🔄 Updating existing user's clerkId");
-        userData = await User.findByIdAndUpdate(
-          existingUser._id,
-          {
-            clerkId: userId,
-            firstName: clerkUser.firstName || existingUser.firstName,
-            lastName: clerkUser.lastName || existingUser.lastName,
-            photoUrl: clerkUser.imageUrl || existingUser.photoUrl,
-            lastLogin: new Date(),
-          },
-          { new: true }
-        );
+        // User exists - check if clerkId matches
+        if (existingUser.clerkId === userId) {
+          // Same user, just update login time
+          console.log("✅ Existing user found with matching clerkId");
+          userData = await User.findByIdAndUpdate(
+            existingUser._id,
+            {
+              firstName: clerkUser.firstName || existingUser.firstName,
+              lastName: clerkUser.lastName || existingUser.lastName,
+              photoUrl: clerkUser.imageUrl || existingUser.photoUrl,
+              lastLogin: new Date(),
+            },
+            { new: true }
+          );
+        } else {
+          // User exists with different clerkId - DO NOT UPDATE clerkId!
+          // This means they're trying to log in with a different Clerk account but same email
+          console.log("⚠️ User exists with different clerkId - user needs to complete profile");
+          redirect("/complete-profile");
+        }
       } else {
         // Create new user
         console.log("✨ Creating new default profile");

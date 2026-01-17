@@ -9,14 +9,29 @@ import { patientAPI, vitalsAPI, prescriptionsAPI, appointmentsAPI, notifications
 export function DoctorPatientList({ doctorId }: { doctorId: string }) {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
+        setLoading(true);
+        setError("");
+        console.log("Fetching patients from API...");
         const data = await patientAPI.getAll(page, 10, search);
-        setPatients(data.data || []);
+        console.log("API Response:", data);
+        
+        if (data.success) {
+          setPatients(data.data || []);
+          console.log("Patients loaded:", data.data?.length || 0);
+        } else {
+          setError(data.message || "Failed to fetch patients");
+          console.error("API returned error:", data.message);
+        }
+      } catch (err) {
+        console.error("Error fetching patients:", err);
+        setError("Failed to load patients. Please check if the backend server is running.");
       } finally {
         setLoading(false);
       }
@@ -48,8 +63,21 @@ export function DoctorPatientList({ doctorId }: { doctorId: string }) {
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded"></div>)}
         </div>
+      ) : error ? (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-xs text-red-700 underline hover:text-red-800"
+          >
+            Refresh page
+          </button>
+        </div>
       ) : patients.length === 0 ? (
-        <p className="text-sm text-gray-600">No patients found</p>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">No patients found</p>
+          <p className="text-xs text-yellow-600 mt-1">Try adjusting your search or check if patients exist in the database</p>
+        </div>
       ) : (
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {patients.map((patient) => (

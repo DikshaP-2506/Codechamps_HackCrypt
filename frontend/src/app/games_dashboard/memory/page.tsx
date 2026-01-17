@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import memoryCardImg from "../assets/memory_card.png";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Game setup
 const DIFFICULTIES = {

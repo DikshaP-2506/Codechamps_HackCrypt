@@ -948,3 +948,109 @@ function getTimeAgo(date) {
   if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
   return new Date(date).toLocaleDateString();
 }
+
+// @desc    Get all documents with patient details for doctors
+// @route   GET /api/medical-documents/all-with-patients
+// @access  Private (Doctor only)
+exports.getAllDocumentsWithPatients = async (req, res) => {
+  try {
+    const PatientProfile = require('../models/PatientProfile');
+    const {
+      page = 1,
+      limit = 50,
+      document_type,
+      category,
+      search,
+      sort_by = 'uploaded_at',
+      sort_order = 'desc'
+    } = req.query;
+
+    // Build filter query
+    const filter = { is_deleted: false, is_active: true };
+
+    if (document_type) filter.document_type = document_type;
+    if (category) filter.category = category;
+
+    // Search in file name, description, tags
+    if (search) {
+      filter.$or = [
+        { file_name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
+      ];
+    }
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    const sortOrder = sort_order === 'asc' ? 1 : -1;
+
+    // Fetch documents
+    const documents = await MedicalDocument.find(filter)
+      .sort({ [sort_by]: sortOrder })
+      .limit(parseInt(limit))
+      .skip(skip)
+      .select('-access_logs')
+      .lean();
+
+    // Get unique patient IDs
+    const patientIds = [...new Set(documents.map(doc => doc.patient_id))];
+
+    // Fetch all patient details
+    const patients = await PatientProfile.find({
+      $or: [
+        { clerk_user_id: { $in: patientIds } },
+        { _id: { $in: patientIds } }
+      ]
+    }).select('clerk_user_id _id name date_of_birth gender blood_group contact_number emergency_contact').lean();
+
+    // Create a map of patient details
+    const patientMap = {};
+    patients.forEach(patient => {
+      const key = patient.clerk_user_id || patient._id.toString();
+      patientMap[key] = patient;
+      // Also map by _id for fallback
+      if (patient._id) {
+        patientMap[patient._id.toString()] = patient;
+      }
+    });
+
+    // Combine documents with patient details
+    const documentsWithPatients = documents.map(doc => {
+      const patientKey = doc.patient_id?.toString();
+      const patient = patientMap[patientKey] || null;
+      
+      return {
+        ...doc,
+        patient: patient ? {
+          _id: patient._id,
+          clerk_user_id: patient.clerk_user_id,
+          name: patient.name,
+          date_of_birth: patient.date_of_birth,
+          gender: patient.gender,
+          blood_group: patient.blood_group,
+          contact_number: patient.contact_number,
+          age: patient.date_of_birth ? 
+            Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : null
+        } : null
+      };
+    });
+
+    const total = await MedicalDocument.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      count: documentsWithPatients.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      data: documentsWithPatients
+    });
+  } catch (error) {
+    console.error('Get all documents with patients error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving documents with patient details',
+      error: error.message
+    });
+  }
+};

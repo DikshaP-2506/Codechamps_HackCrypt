@@ -404,8 +404,8 @@ export default function AdminDashboard() {
             <MetricCard
               icon={<Users className="h-6 w-6 text-emerald-600" />}
               title="Total Patients"
-              value="2,547"
-              subtitle="Active patients"
+              value={loading ? "..." : patientStats.totalPatients.toLocaleString()}
+              subtitle={`${loading ? "..." : patientStats.activePatients} active patients`}
               trend={{ value: 156, direction: "up" }}
             />
             <MetricCard

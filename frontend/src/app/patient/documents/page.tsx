@@ -14,6 +14,21 @@ interface MedicalDocument {
   description?: string;
   uploaded_at: string;
   uploaded_by: string;
+  patient_id?: string;
+  patient_metadata?: {
+    _id: string;
+    name: string;
+    date_of_birth: string;
+    gender: string;
+    blood_group?: string;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+    address?: string;
+    allergies?: string[];
+    chronic_conditions?: string[];
+    past_surgeries?: string[];
+    clerk_user_id?: string;
+  } | null;
   report_details?: {
     test_date?: string;
     laboratory?: string;
@@ -30,6 +45,7 @@ export default function PatientDocumentsPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [viewAllPatients, setViewAllPatients] = useState(false);
   const [uploadData, setUploadData] = useState({
     document_type: 'Lab Report',
     category: 'medical_records',
@@ -54,7 +70,7 @@ export default function PatientDocumentsPage() {
   const fetchDoctors = async () => {
     setLoadingDoctors(true);
     try {
-      const response = await fetch('http://localhost:5001/api/users/doctors');
+      const response = await fetch('http://localhost:5000/api/users/doctors');
       const data = await response.json();
       if (data.success) {
         setDoctors(data.data);
@@ -68,26 +84,61 @@ export default function PatientDocumentsPage() {
 
   // Fetch documents
   const fetchDocuments = async () => {
-    if (!user?.id) return;
-    
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/api/medical-documents/patient/${user.id}`);
+      let url = '';
+      
+      if (viewAllPatients) {
+        // Fetch all documents with patient metadata - increased limit to get all
+        url = 'http://localhost:5000/api/medical-documents/all-with-patients?limit=10000';
+        console.log('🔍 Fetching ALL patients documents from:', url);
+      } else {
+        // Fetch only current user's documents
+        if (!user?.id) {
+          console.warn('⚠️ No user ID available');
+          setLoading(false);
+          return;
+        }
+        url = `http://localhost:5000/api/medical-documents/patient/${user.id}`;
+        console.log('🔍 Fetching user documents from:', url);
+      }
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
+      console.log('✅ API Response:', data);
+      console.log('📊 Documents count:', data.data?.length || 0);
+      console.log('👥 Unique patients:', viewAllPatients ? new Set(data.data?.map((d: any) => d.patient_id)).size : 'N/A');
+      
       if (data.success) {
-        setDocuments(data.data);
+        setDocuments(data.data || []);
+        if (viewAllPatients && data.data?.length > 0) {
+          console.log('✅ Successfully loaded documents from all patients');
+        } else if (viewAllPatients) {
+          console.warn('⚠️ No documents found in database');
+        }
+      } else {
+        console.error('❌ API returned error:', data.message);
+        alert(`Error: ${data.message}`);
       }
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error('❌ Error fetching documents:', error);
+      alert('Failed to fetch documents. Please ensure the backend server is running on port 5000.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('👤 Current User ID:', user?.id);
+    console.log('🌐 View All Patients Mode:', viewAllPatients);
     fetchDocuments();
-  }, [user?.id]);
+  }, [user?.id, viewAllPatients]);
 
   // Handle file upload
   const handleFileUpload = async (e: React.FormEvent) => {
@@ -170,7 +221,34 @@ export default function PatientDocumentsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <h1 className="text-3xl font-bold mb-6">My Medical Documents</h1>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {viewAllPatients ? 'All Patients Medical Documents' : 'My Medical Documents'}
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {viewAllPatients 
+              ? `Viewing documents from all patients in the database (${documents.length} documents)` 
+              : 'Your personal medical documents'}
+          </p>
+        </div>
+        <button
+          onClick={() => setViewAllPatients(!viewAllPatients)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          {viewAllPatients ? (
+            <>
+              <span>👤</span>
+              <span>View My Documents</span>
+            </>
+          ) : (
+            <>
+              <span>👥</span>
+              <span>View All Patients</span>
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Upload Section */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -352,9 +430,6 @@ export default function PatientDocumentsPage() {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={3}
             />
-            <p className="mt-1 text-right text-xs text-gray-500">
-              [{uploadData.report_notes.length}/500]
-            </p>
           </div>
 
           <button
@@ -369,85 +444,157 @@ export default function PatientDocumentsPage() {
 
       {/* Documents List */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">My Documents</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">
+            {viewAllPatients ? 'All Patients Documents' : 'My Documents'}
+          </h2>
+          <div className="text-sm text-gray-600">
+            {!loading && (
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                {documents.length} {documents.length === 1 ? 'document' : 'documents'}
+              </span>
+            )}
+          </div>
+        </div>
         
         {loading ? (
-          <p className="text-center py-8 text-gray-600">Loading documents...</p>
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="text-gray-600 mt-4">Loading documents...</p>
+          </div>
         ) : documents.length === 0 ? (
-          <p className="text-center py-8 text-gray-600">No documents uploaded yet</p>
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-600 text-lg mb-2">
+              {viewAllPatients 
+                ? '📋 No documents found in the database' 
+                : '📋 No documents uploaded yet'}
+            </p>
+            <p className="text-gray-500 text-sm">
+              {viewAllPatients 
+                ? 'Try uploading some documents first or check if the backend server is running' 
+                : 'Upload your first medical document above'}
+            </p>
+          </div>
         ) : (
           <div className="space-y-4">
             {documents.map((doc) => (
               <div
                 key={doc._id}
-                className="border rounded-lg p-4 hover:shadow-md transition flex items-center justify-between"
+                className="border rounded-lg p-4 hover:shadow-md transition"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      {doc.file_type.includes('pdf') ? (
-                        <span className="text-2xl">📄</span>
-                      ) : (
-                        <span className="text-2xl">🖼️</span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{doc.file_name}</h3>
-                      <div className="flex gap-4 text-sm text-gray-600">
-                        <span>{doc.document_type}</span>
-                        <span>•</span>
-                        <span>{formatFileSize(doc.file_size)}</span>
-                        <span>•</span>
-                        <span>{formatDate(doc.uploaded_at)}</span>
-                        {doc.report_details?.priority && doc.report_details.priority !== 'normal' && (
-                          <>
-                            <span>•</span>
-                            <span className={`font-semibold ${
-                              doc.report_details.priority === 'emergency' ? 'text-red-600' : 'text-orange-600'
-                            }`}>
-                              {doc.report_details.priority === 'emergency' ? '🔴 EMERGENCY' : '🟡 URGENT'}
-                            </span>
-                          </>
-                        )}
+                {/* Patient Info - Only show when viewing all patients */}
+                {viewAllPatients && doc.patient_metadata && (
+                  <div className="mb-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <h4 className="font-semibold text-blue-900 mb-2">Patient Information</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Name:</span>
+                        <span className="ml-2 font-medium">{doc.patient_metadata.name}</span>
                       </div>
-                      {doc.description && (
-                        <p className="text-sm text-gray-700 mt-1">{doc.description}</p>
+                      <div>
+                        <span className="text-gray-600">Gender:</span>
+                        <span className="ml-2 font-medium">{doc.patient_metadata.gender}</span>
+                      </div>
+                      {doc.patient_metadata.blood_group && (
+                        <div>
+                          <span className="text-gray-600">Blood:</span>
+                          <span className="ml-2 font-medium">{doc.patient_metadata.blood_group}</span>
+                        </div>
                       )}
-                      {doc.report_details && (
-                        <div className="text-xs text-gray-600 mt-2 space-y-1">
-                          {doc.report_details.test_date && (
-                            <p>📅 Test Date: {new Date(doc.report_details.test_date).toLocaleDateString()}</p>
-                          )}
-                          {doc.report_details.laboratory && (
-                            <p>🏥 Lab: {doc.report_details.laboratory}</p>
-                          )}
-                          {doc.report_details.ordering_doctor && (
-                            <p>👨‍⚕️ Doctor: {doc.report_details.ordering_doctor}</p>
-                          )}
-                          {doc.report_details.report_notes && (
-                            <p>📝 Notes: {doc.report_details.report_notes}</p>
-                          )}
+                      <div>
+                        <span className="text-gray-600">DOB:</span>
+                        <span className="ml-2 font-medium">
+                          {new Date(doc.patient_metadata.date_of_birth).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {doc.patient_metadata.allergies && doc.patient_metadata.allergies.length > 0 && (
+                        <div className="col-span-2">
+                          <span className="text-gray-600">Allergies:</span>
+                          <span className="ml-2 font-medium text-red-600">
+                            {doc.patient_metadata.allergies.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      {doc.patient_metadata.chronic_conditions && doc.patient_metadata.chronic_conditions.length > 0 && (
+                        <div className="col-span-2">
+                          <span className="text-gray-600">Conditions:</span>
+                          <span className="ml-2 font-medium text-orange-600">
+                            {doc.patient_metadata.chronic_conditions.join(', ')}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                  >
-                    View
-                  </a>
-                  <a
-                    href={doc.file_url}
-                    download
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
-                  >
-                    Download
-                  </a>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        {doc.file_type.includes('pdf') ? (
+                          <span className="text-2xl">📄</span>
+                        ) : (
+                          <span className="text-2xl">🖼️</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{doc.file_name}</h3>
+                        <div className="flex gap-4 text-sm text-gray-600">
+                          <span>{doc.document_type}</span>
+                          <span>•</span>
+                          <span>{formatFileSize(doc.file_size)}</span>
+                          <span>•</span>
+                          <span>{formatDate(doc.uploaded_at)}</span>
+                          {doc.report_details?.priority && doc.report_details.priority !== 'normal' && (
+                            <>
+                              <span>•</span>
+                              <span className={`font-semibold ${
+                                doc.report_details.priority === 'emergency' ? 'text-red-600' : 'text-orange-600'
+                              }`}>
+                                {doc.report_details.priority === 'emergency' ? '🔴 EMERGENCY' : '🟡 URGENT'}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {doc.description && (
+                          <p className="text-sm text-gray-700 mt-1">{doc.description}</p>
+                        )}
+                        {doc.report_details && (
+                          <div className="text-xs text-gray-600 mt-2 space-y-1">
+                            {doc.report_details.test_date && (
+                              <p>📅 Test Date: {new Date(doc.report_details.test_date).toLocaleDateString()}</p>
+                            )}
+                            {doc.report_details.laboratory && (
+                              <p>🏥 Lab: {doc.report_details.laboratory}</p>
+                            )}
+                            {doc.report_details.ordering_doctor && (
+                              <p>👨‍⚕️ Doctor: {doc.report_details.ordering_doctor}</p>
+                            )}
+                            {doc.report_details.report_notes && (
+                              <p>📝 Notes: {doc.report_details.report_notes}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <a
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    >
+                      View
+                    </a>
+                    <a
+                      href={doc.file_url}
+                      download
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+                    >
+                      Download
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}

@@ -70,7 +70,7 @@ function Sidebar() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
-  const userName = user?.fullName || "Dr. Emily Carter";
+  const userName = user?.fullName || user?.firstName || user?.lastName || "Doctor";
   const userImage = user?.imageUrl;
 
   const handleLogout = async () => {
@@ -568,7 +568,7 @@ export default function DoctorDashboard() {
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, Dr. {user?.lastName || "Smith"}! 👋
+              Welcome back, {user?.fullName || user?.firstName || "Doctor"}! 👋
             </h1>
             <p className="mt-2 text-gray-600">
               {new Date().toLocaleDateString("en-US", {

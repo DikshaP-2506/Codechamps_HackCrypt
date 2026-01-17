@@ -44,11 +44,29 @@ exports.getVitalsByPatientId = async (req, res, next) => {
   try {
     const { limit = 10, sortBy = 'recorded_at', order = 'desc' } = req.query;
 
-    const vitals = await PhysicalVitals.find({ patient_id: req.params.patientId })
+    // Try to find vitals by patient_id (could be _id or clerk_user_id)
+    let vitals = await PhysicalVitals.find({ patient_id: req.params.patientId })
       .populate('recorded_by', 'name email')
       .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
       .limit(limit * 1)
-      .select('-__v');
+      .select('-__v')
+      .lean();
+
+    // If no vitals found and patientId looks like MongoDB ObjectId, 
+    // also try searching by clerk_user_id from patient profile
+    if (vitals.length === 0 && mongoose.Types.ObjectId.isValid(req.params.patientId)) {
+      const PatientProfile = require('../models/PatientProfile');
+      const patient = await PatientProfile.findById(req.params.patientId).select('clerk_user_id');
+      
+      if (patient && patient.clerk_user_id) {
+        vitals = await PhysicalVitals.find({ patient_id: patient.clerk_user_id })
+          .populate('recorded_by', 'name email')
+          .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
+          .limit(limit * 1)
+          .select('-__v')
+          .lean();
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -56,6 +74,7 @@ exports.getVitalsByPatientId = async (req, res, next) => {
       data: vitals
     });
   } catch (error) {
+    console.error('Get vitals by patient ID error:', error);
     next(error);
   }
 };

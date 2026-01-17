@@ -187,7 +187,7 @@ export default function ChatSupport() {
         if (!sessionId) setSessionId(currentSessionId);
 
         // Call AI backend
-        const response = await fetch('http://localhost:5001/api/chat/message', {
+        const response = await fetch('http://localhost:5000/api/chat/message', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ export default function ChatSupport() {
       if (!sessionId) setSessionId(currentSessionId);
 
       // Call AI backend to fetch patient data
-      const response = await fetch('http://localhost:5001/api/chat/fetch-data', {
+      const response = await fetch('http://localhost:5000/api/chat/fetch-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

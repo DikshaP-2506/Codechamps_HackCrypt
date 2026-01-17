@@ -1,10 +1,10 @@
 const PatientProfile = require('../models/PatientProfile');
 const mongoose = require('mongoose');
 
-// @desc    Get all users with role='patient'
-// @route   GET /api/patients/users/all
-// @access  Public
-exports.getPatientUsers = async (req, res, next) => {
+// @desc    Get all patient profiles (from both PatientProfile and Users with role='patient')
+// @route   GET /api/patients
+// @access  Public (should be protected with auth in production)
+exports.getAllPatients = async (req, res, next) => {
   try {
     const { search } = req.query;
 
@@ -45,14 +45,83 @@ exports.getPatientProfiles = async (req, res, next) => {
       ];
     }
 
-    const patients = await PatientProfile.find(query).select('-__v').lean();
+    // Get patients from PatientProfile collection
+    const profilePatients = await PatientProfile.find(query)
+      .populate('user_id', 'name email')
+      .populate('primary_doctor_id', 'name specialization')
+      .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
+      .select('-__v')
+      .lean();
+
+    // Get users with role='patient' from Users collection
+    const User = mongoose.connection.collection('users');
+    const userQuery = { role: 'patient', isActive: true };
+    
+    if (search) {
+      userQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const userPatients = await User.find(userQuery).toArray();
+
+    // Format user patients to match PatientProfile structure
+    const formattedUserPatients = userPatients
+      .filter(user => {
+        // Exclude users that already have a patient profile
+        return !profilePatients.some(p => p.clerk_user_id === user.clerkId);
+      })
+      .map(user => ({
+        _id: user._id.toString(),
+        clerk_user_id: user.clerkId,
+        name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown',
+        date_of_birth: user.dateOfBirth || new Date('2000-01-01'),
+        gender: user.gender || 'Not specified',
+        blood_group: user.bloodGroup || '',
+        phone_number: user.phone || '',
+        emergency_contact_name: '',
+        emergency_contact_phone: user.phone || '',
+        address: user.address || '',
+        allergies: [],
+        chronic_conditions: [],
+        past_surgeries: [],
+        family_history: '',
+        is_active: user.isActive !== false,
+        created_at: user.createdAt || new Date(),
+        source: 'user_table'
+      }));
+
+    // Combine both lists
+    const allPatients = [...profilePatients, ...formattedUserPatients];
+
+    // Apply sorting to combined list
+    allPatients.sort((a, b) => {
+      const aValue = a[sortBy] || a.created_at;
+      const bValue = b[sortBy] || b.created_at;
+      return order === 'desc' 
+        ? (bValue > aValue ? 1 : -1)
+        : (aValue > bValue ? 1 : -1);
+    });
+
+    // Apply pagination to combined list
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedPatients = allPatients.slice(startIndex, endIndex);
 
     res.status(200).json({
       success: true,
-      count: patients.length,
-      data: patients
+      count: paginatedPatients.length,
+      totalPages: Math.ceil(allPatients.length / limit),
+      currentPage: parseInt(page),
+      totalPatients: allPatients.length,
+      data: paginatedPatients
     });
   } catch (error) {
+    console.error('Get all patients error:', error);
     next(error);
   }
 };
@@ -67,7 +136,42 @@ exports.getPatientById = async (req, res, next) => {
     
     if (!patient) {
       // If not found by _id, try clerk_user_id
-      patient = await PatientProfile.findOne({ clerk_user_id: req.params.id }).select('-__v');
+      patient = await PatientProfile.findOne({ clerk_user_id: req.params.id }).select('-__v').lean();
+    }
+
+    // If still not found, check Users collection
+    if (!patient) {
+      const User = mongoose.connection.collection('users');
+      const user = await User.findOne({ 
+        $or: [
+          { _id: mongoose.Types.ObjectId.isValid(req.params.id) ? new mongoose.Types.ObjectId(req.params.id) : null },
+          { clerkId: req.params.id }
+        ],
+        role: 'patient'
+      });
+
+      if (user) {
+        // Format user to match patient profile structure
+        patient = {
+          _id: user._id.toString(),
+          clerk_user_id: user.clerkId,
+          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown',
+          date_of_birth: user.dateOfBirth || new Date('2000-01-01'),
+          gender: user.gender || 'Not specified',
+          blood_group: user.bloodGroup || '',
+          phone_number: user.phone || '',
+          emergency_contact_name: '',
+          emergency_contact_phone: user.phone || '',
+          address: user.address || '',
+          allergies: [],
+          chronic_conditions: [],
+          past_surgeries: [],
+          family_history: '',
+          is_active: user.isActive !== false,
+          created_at: user.createdAt || new Date(),
+          source: 'user_table'
+        };
+      }
     }
 
     if (!patient) {
@@ -82,6 +186,7 @@ exports.getPatientById = async (req, res, next) => {
       data: patient
     });
   } catch (error) {
+    console.error('Get patient by ID error:', error);
     next(error);
   }
 };

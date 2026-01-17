@@ -10,7 +10,7 @@ export default function CompleteProfilePage() {
 
   const [formData, setFormData] = useState({
     phone: "",
-    role: "patient" as "patient" | "doctor" | "admin" | "caretaker" | "lab_reporter" | "nurse",
+    role: "patient" as "patient" | "doctor" | "caretaker" | "lab_reporter" | "nurse",
     dateOfBirth: "",
     gender: "" as "male" | "female" | "other" | "",
   });
@@ -29,7 +29,10 @@ export default function CompleteProfilePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          email: user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress,
+        }),
       });
 
       const data = await response.json();
@@ -39,7 +42,9 @@ export default function CompleteProfilePage() {
       }
 
       // Profile created successfully, redirect based on role
-      if (formData.role === "doctor") {
+      if (data.data?.isAdmin) {
+        router.push("/admin/dashboard");
+      } else if (formData.role === "doctor") {
         router.push("/doctor/dashboard");
       } else {
         router.push("/");
@@ -103,7 +108,7 @@ export default function CompleteProfilePage() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  role: e.target.value as "patient" | "doctor" | "admin" | "caretaker" | "lab_reporter" | "nurse",
+                  role: e.target.value as "patient" | "doctor" | "caretaker" | "lab_reporter" | "nurse",
                 })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
@@ -114,7 +119,6 @@ export default function CompleteProfilePage() {
               <option value="nurse">Nurse</option>
               <option value="caretaker">Caretaker/Family Member</option>
               <option value="lab_reporter">Lab Reporter</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 

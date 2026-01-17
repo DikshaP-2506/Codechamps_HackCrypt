@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Home,
@@ -302,7 +304,39 @@ function SimpleDoughnutChart() {
 
 // Main Admin Dashboard Component
 export default function AdminDashboard() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [notificationCount] = useState(5);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    // Check if user is admin
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    // Get user email
+    const userEmail = user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress;
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "pixelcraftr05@gmail.com";
+
+    if (userEmail !== adminEmail) {
+      router.push("/");
+      return;
+    }
+  }, [user, isLoaded, router]);
+
+  if (!isLoaded || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-teal-50 to-emerald-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">

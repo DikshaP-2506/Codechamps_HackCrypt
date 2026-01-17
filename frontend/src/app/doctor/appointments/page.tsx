@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import DoctorRequestedAppointments from "@/components/DoctorRequestedAppointments";
 import {
   Home,
   Users,
@@ -261,7 +263,7 @@ function Avatar({ name, size = 40 }: { name: string; size?: number }) {
   );
 }
 
-function Sidebar() {
+function Sidebar({ userName, userImage }: { userName?: string; userImage?: string }) {
   const navItems = [
     { label: "Dashboard", icon: Home, href: "/doctor/dashboard" },
     { label: "Patients", icon: Users, href: "/doctor/patients" },
@@ -279,9 +281,9 @@ function Sidebar() {
     <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col bg-gradient-to-b from-purple-800 to-purple-900 md:flex">
       <div className="border-b border-purple-700 px-5 py-6">
         <div className="flex items-center gap-3">
-          <Avatar name="Dr. Sarah Johnson" size={52} />
+          <Avatar name={userName || "Doctor"} imageUrl={userImage} size={52} />
           <div>
-            <p className="text-sm font-semibold text-white">Dr. Sarah Johnson</p>
+            <p className="text-sm font-semibold text-white">{userName || "Doctor"}</p>
             <p className="text-xs text-purple-200">Cardiologist</p>
           </div>
         </div>
@@ -964,12 +966,95 @@ function NewAppointmentModal({
 }
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(appointmentsMock);
+  const { user } = useUser();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [requests, setRequests] = useState<AppointmentRequest[]>(appointmentRequestsMock);
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [openNewModal, setOpenNewModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showRequests, setShowRequests] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch appointments from database
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user?.id) {
+        console.log('No user ID available');
+        return;
+      }
+      
+      console.log('Fetching appointments for doctor ID:', user.id);
+      
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/appointments/doctor/${user.id}`);
+        
+        console.log('Appointments API response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Appointments data received:', data);
+          const dbAppointments = data.data || [];
+          
+          console.log('Total appointments from DB:', dbAppointments.length);
+          console.log('Appointments:', dbAppointments);
+          
+          // Convert database appointments to calendar format
+          const formattedAppointments = dbAppointments
+            .filter((apt: any) => apt.status === 'approved' || apt.status === 'scheduled' || apt.status === 'confirmed')
+            .map((apt: any) => convertToCalendarFormat(apt));
+          
+          console.log('Formatted appointments for calendar:', formattedAppointments.length);
+          setAppointments(formattedAppointments);
+        } else {
+          console.error('Failed to fetch appointments:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [user?.id]);
+
+  // Convert database appointment to calendar format
+  const convertToCalendarFormat = (dbAppt: any): Appointment => {
+    const appointmentDate = new Date(dbAppt.scheduled_date || dbAppt.start_time);
+    const dayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][appointmentDate.getDay()];
+    const dateLabel = appointmentDate.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+    
+    // Extract time from Date objects
+    const startTime = new Date(dbAppt.start_time);
+    const endTime = new Date(dbAppt.end_time);
+    const start = `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+    const end = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+    
+    const patientName = dbAppt.patient_id 
+      ? `${dbAppt.patient_id.first_name || ''} ${dbAppt.patient_id.last_name || ''}`.trim()
+      : 'Unknown Patient';
+    
+    return {
+      id: dbAppt._id,
+      dayKey,
+      dateLabel,
+      start,
+      end,
+      patientName,
+      patientId: dbAppt.patient_id?._id || dbAppt.patient_id,
+      type: (dbAppt.appointment_type || 'consultation').replace('_', ' ') as any,
+      location: { 
+        mode: dbAppt.appointment_type === 'virtual' ? 'virtual' : 'clinic',
+        detail: dbAppt.location || (dbAppt.appointment_type === 'virtual' ? 'Virtual' : 'Clinic Room')
+      },
+      status: dbAppt.status as AppointmentStatus,
+      phone: dbAppt.patient_id?.phone_number || '',
+      email: dbAppt.patient_id?.email || '',
+      reason: dbAppt.appointment_reason || dbAppt.reason || '',
+      notes: dbAppt.notes,
+    };
+  };
 
   const handleApproveRequest = (req: AppointmentRequest) => {
     // Convert request to scheduled appointment
@@ -1044,98 +1129,16 @@ export default function AppointmentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar userName={user?.fullName || undefined} userImage={user?.imageUrl} />
 
       <div className="md:pl-64">
         <TopBar onOpenNew={() => setOpenNewModal(true)} />
 
         <div className="mx-auto max-w-7xl px-4 py-6">
-          {/* Requested Appointments Section */}
-          {requests.length > 0 && (
-            <div className="mb-6 rounded-2xl border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100/50 p-6 shadow-lg">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-300 text-sm font-bold text-yellow-900 shadow-md">
-                    {requests.length}
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Requested Appointments</h2>
-                    <p className="text-sm text-gray-600">Patients awaiting your approval</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowRequests(!showRequests)}
-                  className="flex items-center gap-2 rounded-lg bg-yellow-200 px-4 py-2 text-sm font-bold text-yellow-900 transition hover:bg-yellow-300 hover:shadow-md"
-                >
-                  {showRequests ? "▼ Hide" : "▶ Show"} Requests
-                </button>
-              </div>
-
-              {showRequests && (
-                <div className="space-y-3">
-                  {requests.map((req) => (
-                    <div
-                      key={req.id}
-                      className="rounded-xl border-2 border-yellow-200 bg-white p-4 shadow-md hover:shadow-lg transition"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Avatar name={req.patientName} size={40} />
-                            <div>
-                              <p className="font-bold text-gray-900">{req.patientName}</p>
-                              <p className="text-sm text-gray-600">{req.patientId}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-3">
-                            <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Preferred Date</p>
-                              <p className="text-sm font-bold text-gray-900 mt-1">
-                                {new Date(req.preferredDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Preferred Time</p>
-                              <p className="text-sm font-bold text-gray-900 mt-1">{req.preferredTime}</p>
-                            </div>
-                            <div className="rounded-lg bg-blue-50 px-3 py-2 border border-blue-200">
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Type</p>
-                              <p className="text-sm font-bold text-blue-700 mt-1">{req.type}</p>
-                            </div>
-                            <div className="rounded-lg bg-emerald-50 px-3 py-2 border border-emerald-200">
-                              <p className="text-xs font-semibold text-gray-600 uppercase">Location</p>
-                              <p className="text-sm font-bold text-emerald-700 mt-1">
-                                {req.location === "clinic" ? "🏥 In-clinic" : "💻 Virtual"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg bg-gray-50 px-3 py-2 border border-gray-200">
-                            <p className="text-xs font-semibold text-gray-600 uppercase">Reason</p>
-                            <p className="text-sm text-gray-700 mt-1 font-medium">{req.reason}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => handleApproveRequest(req)}
-                            className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 hover:shadow-lg"
-                          >
-                            ✓ Approve
-                          </button>
-                          <button
-                            onClick={() => handleRejectRequest(req.id)}
-                            className="rounded-lg border-2 border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50 hover:border-red-400"
-                          >
-                            ✕ Reject
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Real-time Requested Appointments Section */}
+          {user?.id && (
+            <div className="mb-6">
+              <DoctorRequestedAppointments doctorId={user.id} />
             </div>
           )}
 

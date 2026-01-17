@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
+const User = require('../models/User');
 
 // @desc    Get all appointments
 // @route   GET /api/appointments
@@ -73,9 +75,13 @@ exports.getAllAppointments = async (req, res, next) => {
 // @access  Public
 exports.getAppointmentsByPatientId = async (req, res, next) => {
   try {
-    const { limit = 10, status, upcoming } = req.query;
+    const { limit = 100, status, upcoming } = req.query;
 
     const query = { patient_id: req.params.patientId };
+
+    console.log('=== FETCH PATIENT APPOINTMENTS ===');
+    console.log('Patient ID:', req.params.patientId);
+    console.log('Query:', query);
 
     // Filter by status if provided
     if (status) {
@@ -92,12 +98,40 @@ exports.getAppointmentsByPatientId = async (req, res, next) => {
       .limit(limit * 1)
       .select('-__v');
 
+    console.log('Found appointments:', appointments.length);
+
+    // We need to manually fetch doctor info from Users collection since doctor_id is just a Clerk ID string
+    const User = require('mongoose').connection.collection('users');
+    
+    const appointmentsWithDoctors = await Promise.all(
+      appointments.map(async (apt) => {
+        const aptObj = apt.toObject();
+        if (aptObj.doctor_id) {
+          // Try to find doctor by clerkId
+          const doctor = await User.findOne({ clerkId: aptObj.doctor_id });
+          if (doctor) {
+            aptObj.doctor_id = {
+              _id: doctor._id.toString(),
+              firstName: doctor.firstName || doctor.name?.split(' ')[0] || '',
+              lastName: doctor.lastName || doctor.name?.split(' ')[1] || '',
+              email: doctor.email,
+              role: doctor.role
+            };
+          }
+        }
+        return aptObj;
+      })
+    );
+
+    console.log('Appointments with doctor info:', appointmentsWithDoctors.length);
+
     res.status(200).json({
       success: true,
-      count: appointments.length,
-      data: appointments
+      count: appointmentsWithDoctors.length,
+      data: appointmentsWithDoctors
     });
   } catch (error) {
+    console.error('Error fetching patient appointments:', error);
     next(error);
   }
 };
@@ -107,7 +141,7 @@ exports.getAppointmentsByPatientId = async (req, res, next) => {
 // @access  Public
 exports.getAppointmentsByDoctorId = async (req, res, next) => {
   try {
-    const { limit = 10, status, date } = req.query;
+    const { limit = 100, status, date } = req.query;
 
     const query = { doctor_id: req.params.doctorId };
 
@@ -126,6 +160,7 @@ exports.getAppointmentsByDoctorId = async (req, res, next) => {
     }
 
     const appointments = await Appointment.find(query)
+      .populate('patient_id', 'first_name last_name email phone_number')
       .sort({ start_time: 1 })
       .limit(limit * 1)
       .select('-__v');
@@ -181,6 +216,89 @@ exports.createAppointment = async (req, res, next) => {
   }
 };
 
+// @desc    Request new appointment (Patient-initiated)
+// @route   POST /api/appointments/request
+// @access  Public
+exports.requestAppointment = async (req, res, next) => {
+  try {
+    const { 
+      patient_id, // Should come from authenticated session
+      doctor_id, 
+      appointment_type, 
+      preferred_dates, 
+      preferred_times, 
+      reason 
+    } = req.body;
+
+    console.log('=== REQUEST APPOINTMENT ===');
+    console.log('Patient ID:', patient_id);
+    console.log('Doctor ID:', doctor_id);
+    console.log('Appointment Type:', appointment_type);
+    console.log('Preferred Dates:', preferred_dates);
+    console.log('Preferred Times:', preferred_times);
+
+    // Validation
+    if (!doctor_id || !appointment_type) {
+      return res.status(400).json({
+        success: false,
+        message: 'doctor_id and appointment_type are required'
+      });
+    }
+
+    if (!patient_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'patient_id is required (should be extracted from session)'
+      });
+    }
+
+    if (!preferred_dates || preferred_dates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one preferred date is required'
+      });
+    }
+
+    if (preferred_dates.length > 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum of 3 preferred dates allowed'
+      });
+    }
+
+    if (!preferred_times || preferred_times.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one preferred time must be selected'
+      });
+    }
+
+    // Create appointment request with auto-generated fields
+    const appointmentRequest = await Appointment.create({
+      patient_id,
+      doctor_id,
+      appointment_type,
+      preferred_dates,
+      preferred_times,
+      reason: reason || '',
+      status: 'requested', // Auto-set
+      location: null, // Auto-set
+      reminder_sent_24h: false, // Auto-set
+      reminder_sent_1h: false, // Auto-set
+      is_recurring: false, // Auto-set
+      recurrence_pattern: 'none' // Auto-set
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Appointment request submitted successfully',
+      data: appointmentRequest
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Update appointment
 // @route   PUT /api/appointments/:id
 // @access  Public
@@ -205,6 +323,207 @@ exports.updateAppointment = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Appointment updated successfully',
+      data: appointment
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get requested appointments for doctor
+// @route   GET /api/appointments/doctor/:doctorId/requested
+// @access  Public
+exports.getRequestedAppointmentsForDoctor = async (req, res, next) => {
+  try {
+    const { doctorId } = req.params;
+    
+    console.log('=== FETCH REQUESTED APPOINTMENTS ===');
+    console.log('Doctor ID from params:', doctorId);
+    
+    // First, check ALL requested appointments to see what doctor_ids exist
+    const allRequested = await Appointment.find({ status: 'requested' })
+      .select('doctor_id patient_id appointment_type created_at');
+    
+    console.log('ALL requested appointments in DB:', allRequested.length);
+    allRequested.forEach((apt, index) => {
+      console.log(`Appointment ${index + 1}: doctor_id = "${apt.doctor_id}", type: ${typeof apt.doctor_id}`);
+    });
+    
+    // Try to find appointments with doctor_id matching either ObjectId or Clerk ID
+    const appointments = await Appointment.find({
+      doctor_id: doctorId,
+      status: 'requested'
+    })
+      .sort({ created_at: -1 })
+      .select('-__v')
+      .lean();
+
+    console.log('Found appointments matching doctor_id:', appointments.length);
+    console.log('Search doctor_id:', doctorId);
+
+    // Manually fetch patient information from Users collection using clerkId
+    const appointmentsWithPatients = await Promise.all(
+      appointments.map(async (appointment) => {
+        if (appointment.patient_id) {
+          const patientUser = await User.findOne(
+            { clerkId: appointment.patient_id },
+            'clerkId firstName lastName email photoUrl'
+          );
+          
+          if (patientUser) {
+            appointment.patient = {
+              _id: patientUser._id,
+              clerkId: patientUser.clerkId,
+              firstName: patientUser.firstName,
+              lastName: patientUser.lastName,
+              email: patientUser.email,
+              photoUrl: patientUser.photoUrl
+            };
+          }
+        }
+        return appointment;
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      count: appointmentsWithPatients.length,
+      data: appointmentsWithPatients
+    });
+  } catch (error) {
+    console.error('Error fetching requested appointments:', error);
+    next(error);
+  }
+};
+
+// @desc    Approve appointment request
+// @route   PATCH /api/appointments/:id/approve
+// @access  Public
+exports.approveAppointment = async (req, res, next) => {
+  try {
+    const { scheduled_date, start_time, end_time, location } = req.body;
+
+    // Validation
+    if (!scheduled_date || !start_time || !end_time) {
+      return res.status(400).json({
+        success: false,
+        message: 'scheduled_date, start_time, and end_time are required'
+      });
+    }
+
+    // Find the appointment
+    const appointment = await Appointment.findById(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Check if already processed
+    if (appointment.status !== 'requested') {
+      return res.status(400).json({
+        success: false,
+        message: `Appointment is already ${appointment.status}`
+      });
+    }
+
+    // Parse time strings (HH:MM) and combine with scheduled_date
+    const [startHour, startMinute] = start_time.split(':').map(Number);
+    const [endHour, endMinute] = end_time.split(':').map(Number);
+    
+    const startDateTime = new Date(scheduled_date);
+    startDateTime.setHours(startHour, startMinute, 0, 0);
+    
+    const endDateTime = new Date(scheduled_date);
+    endDateTime.setHours(endHour, endMinute, 0, 0);
+
+    // Validate end time is after start time
+    if (endDateTime <= startDateTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'end_time must be after start_time'
+      });
+    }
+
+    // Calculate duration in minutes
+    const duration = Math.round((endDateTime - startDateTime) / 60000);
+
+    // Update appointment with approval details
+    appointment.status = 'approved';
+    appointment.scheduled_date = new Date(scheduled_date);
+    appointment.start_time = startDateTime;
+    appointment.end_time = endDateTime;
+    appointment.duration_minutes = duration;
+    appointment.location = location || null;
+    appointment.approved_at = new Date();
+
+    await appointment.save();
+    
+    // Populate patient information
+    await appointment.populate('patient_id', 'first_name last_name email phone_number');
+
+    // TODO: Trigger notification to patient
+
+    res.status(200).json({
+      success: true,
+      message: 'Appointment approved successfully',
+      data: appointment
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reject appointment request
+// @route   PATCH /api/appointments/:id/reject
+// @access  Public
+exports.rejectAppointment = async (req, res, next) => {
+  try {
+    const { rejection_reason } = req.body;
+
+    // Validation
+    if (!rejection_reason || rejection_reason.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'rejection_reason is required'
+      });
+    }
+
+    // Find the appointment
+    const appointment = await Appointment.findById(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    // Check if already processed
+    if (appointment.status !== 'requested') {
+      return res.status(400).json({
+        success: false,
+        message: `Appointment is already ${appointment.status}`
+      });
+    }
+
+    // Update appointment with rejection details
+    appointment.status = 'rejected';
+    appointment.rejection_reason = rejection_reason;
+    appointment.rejected_at = new Date();
+
+    await appointment.save();
+    
+    // Populate patient information
+    await appointment.populate('patient_id', 'first_name last_name email phone_number');
+
+    // TODO: Trigger notification to patient
+
+    res.status(200).json({
+      success: true,
+      message: 'Appointment rejected successfully',
       data: appointment
     });
   } catch (error) {

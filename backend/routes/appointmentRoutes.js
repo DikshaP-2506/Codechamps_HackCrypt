@@ -6,6 +6,10 @@ const {
   getAppointmentsByDoctorId,
   getAppointmentById,
   createAppointment,
+  requestAppointment,
+  getRequestedAppointmentsForDoctor,
+  approveAppointment,
+  rejectAppointment,
   updateAppointment,
   deleteAppointment,
   cancelAppointment,
@@ -27,6 +31,14 @@ router.get('/availability/:doctorId', checkDoctorAvailability);
 router.route('/')
   .get(getAllAppointments)
   .post(validateAppointment, createAppointment);
+
+// Request appointment (patient-initiated)
+router.post('/request', requestAppointment);
+
+// Doctor approval/rejection routes
+router.get('/doctor/:doctorId/requested', getRequestedAppointmentsForDoctor);
+router.patch('/:id/approve', approveAppointment);
+router.patch('/:id/reject', rejectAppointment);
 
 router.route('/:id')
   .get(getAppointmentById)

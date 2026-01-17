@@ -28,6 +28,8 @@ import {
   Check,
 } from "lucide-react";
 import { PatientTopBar } from "@/components/PatientTopBar";
+import { RequestAppointmentModal } from "@/components/RequestAppointmentModal";
+import PatientAppointmentList from "@/components/PatientAppointmentList";
 
 // Avatar Component
 function Avatar({ name, imageUrl, size = 40 }: { name: string; imageUrl?: string; size?: number }) {
@@ -376,153 +378,6 @@ function CalendarView({
 }
 
 // Request Appointment Modal Component
-function RequestAppointmentModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">Request New Appointment</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form className="space-y-4">
-          {/* Doctor Selection */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Preferred Doctor
-            </label>
-            <select className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-              <option>Dr. Sarah Johnson - Cardiologist</option>
-              <option>Dr. Michael Chen - General Physician</option>
-              <option>Dr. Emily Roberts - Endocrinologist</option>
-            </select>
-          </div>
-
-          {/* Appointment Type */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Appointment Type
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="type"
-                  value="in-person"
-                  defaultChecked
-                  className="h-4 w-4 border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">In-person</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="type"
-                  value="virtual"
-                  className="h-4 w-4 border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">Virtual</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="type"
-                  value="follow-up"
-                  className="h-4 w-4 border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">Follow-up</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Preferred Dates */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Preferred Dates (select up to 3)
-            </label>
-            <input
-              type="date"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Preferred Time */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Preferred Time
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">Morning (9-12)</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">Afternoon (12-3)</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-gray-700">Evening (3-6)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Reason */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Reason for Visit
-            </label>
-            <textarea
-              rows={4}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              placeholder="Please describe your symptoms or reason for the appointment..."
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
-            >
-              Submit Request
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 // Main Appointments Page Component
 export default function PatientAppointments() {
   const { signOut } = useAuth();
@@ -663,46 +518,11 @@ export default function PatientAppointments() {
             </div>
           )}
 
-          {/* List View - Upcoming Appointments */}
-          {viewMode === "list" && (
-            <>
-              <div className="mb-8">
-                <h2 className="mb-4 text-lg font-bold text-gray-900">
-                  Upcoming Appointments ({upcomingAppointments.length})
-                </h2>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  {upcomingAppointments.map((appointment) => (
-                    <AppointmentCard key={appointment.id} appointment={appointment} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Past Appointments */}
-              <div className="mb-8">
-                <button
-                  onClick={() => setShowPast(!showPast)}
-                  className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 hover:text-emerald-600"
-                >
-                  Past Appointments ({pastAppointments.length})
-                  {showPast ? (
-                    <ChevronUp className="h-5 w-5" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5" />
-                  )}
-                </button>
-                {showPast && (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {pastAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                        isPast
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
+          {/* List View - Real Appointments from Database */}
+          {viewMode === "list" && user?.id && (
+            <div className="mb-8">
+              <PatientAppointmentList patientId={user.id} />
+            </div>
           )}
         </main>
       </div>

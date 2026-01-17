@@ -16,30 +16,61 @@ const appointmentSchema = new mongoose.Schema({
   // Status
   status: {
     type: String,
-    enum: ['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show', 'rescheduled'],
-    default: 'scheduled',
+    enum: ['requested', 'approved', 'rejected', 'scheduled', 'confirmed', 'completed', 'cancelled', 'no-show', 'rescheduled'],
+    default: 'requested',
     trim: true
   },
 
   // Appointment Type
   appointment_type: {
     type: String,
-    enum: ['in_person', 'video_call', 'phone_call', 'consultation', 'follow_up', 'therapy_session', 'emergency'],
+    enum: ['in_person', 'virtual', 'follow_up', 'video_call', 'phone_call', 'consultation', 'therapy_session', 'emergency'],
     required: [true, 'Appointment type is required'],
     trim: true
   },
 
   // Scheduling
+  scheduled_date: {
+    type: Date,
+    required: false // Set when approved
+  },
+
   start_time: {
     type: Date,
-    required: [true, 'Start time is required']
+    required: false // Not required for "requested" status
+  },
+
+  end_time: {
+    type: Date,
+    required: false // Set when approved
   },
 
   duration_minutes: {
     type: Number,
-    required: [true, 'Duration is required'],
+    required: false, // Not required for "requested" status
     min: [5, 'Duration must be at least 5 minutes'],
     max: [480, 'Duration cannot exceed 8 hours']
+  },
+
+  // Request-specific fields
+  preferred_dates: [{
+    type: Date
+  }],
+
+  preferred_times: [{
+    type: String,
+    enum: ['Morning (9-12)', 'Afternoon (12-3)', 'Evening (3-6)']
+  }],
+
+  reason: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Reason cannot exceed 1000 characters']
+  },
+
+  location: {
+    type: String,
+    trim: true
   },
 
   // Notes
@@ -58,6 +89,21 @@ const appointmentSchema = new mongoose.Schema({
   reminder_sent_1h: {
     type: Boolean,
     default: false
+  },
+
+  // Approval/Rejection tracking
+  approved_at: {
+    type: Date
+  },
+
+  rejected_at: {
+    type: Date
+  },
+
+  rejection_reason: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Rejection reason cannot exceed 500 characters']
   },
 
   // Recurring appointment support
@@ -87,15 +133,7 @@ const appointmentSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual to calculate end time
-appointmentSchema.virtual('end_time').get(function() {
-  if (this.start_time && this.duration_minutes) {
-    const endTime = new Date(this.start_time);
-    endTime.setMinutes(endTime.getMinutes() + this.duration_minutes);
-    return endTime;
-  }
-  return null;
-});
+// Note: end_time is now a real field in the schema, not a virtual field
 
 // Virtual to check if appointment is upcoming
 appointmentSchema.virtual('is_upcoming').get(function() {

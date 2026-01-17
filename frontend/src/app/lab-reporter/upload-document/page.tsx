@@ -44,7 +44,7 @@ export default function LabReporterUploadPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/api/patients?search=${query}&limit=10`);
+      const response = await fetch(`http://localhost:5000/api/patients?search=${query}&limit=10`);
       const data = await response.json();
       
       if (data.success) {

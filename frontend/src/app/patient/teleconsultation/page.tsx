@@ -1,186 +1,117 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Calendar, Loader2, Play, Video, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { getStudentSessions, LiveSession } from "@/services/liveSessionService";
+import { Button } from "@/components/ui/button";
+import { getPatientSessions, LiveSession } from "@/services/liveSessionService";
+
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI?: any;
+  }
+}
+
+/* 🔥 ALWAYS-AVAILABLE JITSI ROOM */
+const FALLBACK_JITSI_URL =
+  "https://8x8.vc/vpaas-magic-cookie-27bbe0bbe7d340799edfdd4b4250ddc6/SampleAppDownstairsReplacementsAdmitQuite";
 
 export default function PatientTeleconsultationPage() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [sessions, setSessions] = useState<LiveSession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [sessionUrl, setSessionUrl] = useState<string>(FALLBACK_JITSI_URL);
 
-  const activeSession = useMemo(
-    () => sessions.find((s) => s.id === activeSessionId) || sessions[0],
-    [sessions, activeSessionId]
-  );
+  const jaasContainerRef = useRef<HTMLDivElement | null>(null);
+  const jaasApiRef = useRef<any>(null);
 
+  /* =========================
+     LOAD SESSION (OPTIONAL)
+  ========================= */
   useEffect(() => {
-    if (!user?.uid) return;
-
     const load = async () => {
-      setLoading(true);
       try {
-        // patientId passed here
-        const data = await getStudentSessions(user.uid);
-        setSessions(data);
-        if (data.length) {
-          setActiveSessionId((prev) => prev ?? data[0].id);
+        const data: LiveSession[] = await getPatientSessions("public");
+
+        // ✅ If session exists → override fallback
+        if (data.length > 0 && data[0].sessionUrl) {
+          setSessionUrl(data[0].sessionUrl);
         }
-      } catch (error) {
-        console.error("Failed to fetch teleconsultations", error);
-        toast({
-          title: "Error",
-          description: "Could not load teleconsultations",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      } catch {
+        // ❌ Ignore errors → fallback stays
       }
     };
 
     load();
-  }, [user?.uid, toast]);
+  }, []);
 
+  /* =========================
+     LOAD JITSI ALWAYS
+  ========================= */
+  useEffect(() => {
+    if (!jaasContainerRef.current) return;
+
+    const url = new URL(sessionUrl);
+    const domain = url.hostname;
+    const roomName = url.pathname.replace(/^\//, "");
+
+    const loadScript = () =>
+      new Promise<void>((resolve) => {
+        if (window.JitsiMeetExternalAPI) return resolve();
+
+        const script = document.createElement("script");
+        script.src =
+          "https://8x8.vc/vpaas-magic-cookie-27bbe0bbe7d340799edfdd4b4250ddc6/external_api.js";
+        script.async = true;
+        script.onload = () => resolve();
+        document.body.appendChild(script);
+      });
+
+    loadScript().then(() => {
+      if (jaasApiRef.current) jaasApiRef.current.dispose();
+
+      jaasApiRef.current = new window.JitsiMeetExternalAPI(domain, {
+        roomName,
+        parentNode: jaasContainerRef.current,
+      });
+    });
+
+    return () => {
+      jaasApiRef.current?.dispose();
+      jaasApiRef.current = null;
+    };
+  }, [sessionUrl]);
+
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl lg:text-3xl font-bold">
-            Teleconsultation
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Join Jitsi consultation rooms shared by your doctors.
-          </p>
-        </div>
-        <Badge variant="secondary">Your doctors only</Badge>
-      </div>
+      <h1 className="text-2xl font-bold">Teleconsultation</h1>
+      <p className="text-muted-foreground">
+        Join the live consultation with your doctor.
+      </p>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        {/* LEFT – VIDEO PREVIEW */}
-        <Card className="lg:col-span-2 h-[480px]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Video className="w-5 h-5" /> Consultation preview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[400px]">
-            {loading && (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Loading teleconsultations...
-              </div>
-            )}
+      <Card className="h-[600px]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Video className="w-5 h-5" />
+            Consultation preview
+          </CardTitle>
+        </CardHeader>
 
-            {!loading && !activeSession && (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                No teleconsultations available yet.
-              </div>
-            )}
+        <CardContent className="h-[520px]">
+          <div className="relative w-full h-full rounded-xl overflow-hidden border bg-black">
+            <div ref={jaasContainerRef} className="w-full h-full" />
 
-            {!loading && activeSession && (
-              <div className="relative h-full rounded-xl overflow-hidden border bg-black">
-                <iframe
-                  key={activeSession.id}
-                  src={activeSession.sessionUrl}
-                  title={activeSession.sessionName}
-                  allow="camera; microphone; fullscreen; display-capture; autoplay"
-                  className="w-full h-full"
-                />
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between bg-background/90 rounded-lg px-3 py-2">
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {activeSession.sessionName}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Doctor: {activeSession.teacherName || "Assigned doctor"}
-                    </p>
-                  </div>
-                  <Button size="sm" asChild>
-                    <a
-                      href={activeSession.sessionUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      Join
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* RIGHT – SESSION LIST */}
-        <Card className="h-[480px]">
-          <CardHeader>
-            <CardTitle>All teleconsultations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 overflow-y-auto max-h-[400px] pr-1">
-            {loading && (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Loading...
-              </div>
-            )}
-
-            {!loading && sessions.length === 0 && (
-              <div className="text-sm text-muted-foreground">
-                Your doctor has not shared any teleconsultation links yet.
-              </div>
-            )}
-
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => setActiveSessionId(session.id)}
-                className={`w-full text-left p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition ${
-                  activeSession?.id === session.id
-                    ? "border-primary bg-primary/10"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage
-                      src="/placeholder.svg"
-                      alt={session.teacherName || ""}
-                    />
-                    <AvatarFallback>
-                      {(session.teacherName || "DR")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                      {session.sessionName}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {session.teacherName || "Doctor"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      <Calendar className="w-3 h-3 inline mr-1" />
-                      {new Date(session.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="gap-1">
-                    <Users className="w-3 h-3" /> Live
-                  </Badge>
-                </div>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+            <div className="absolute top-3 right-3">
+              <Button size="sm" asChild>
+                <a href={sessionUrl} target="_blank" rel="noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open in new tab
+                </a>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

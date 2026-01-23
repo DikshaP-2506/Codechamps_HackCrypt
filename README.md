@@ -85,19 +85,19 @@ cd backend
 npm install  
 npm run dev  
 
-cd ../ai-backend  
+cd ai-backend  
 npm install  
 npm run dev  
 
-cd ../games-backend  
+cd games-backend  
 npm install  
 npm run dev  
 
-cd ../frontend  
+cd frontend  
 npm install  
 npm run dev  
 
-cd ../hackcryptapp  
+cd hackcryptapp  
 npm install  
 npx expo start  
 
